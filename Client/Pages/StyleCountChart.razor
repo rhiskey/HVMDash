@@ -1,0 +1,136 @@
+﻿@page "/Charts"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using WAAuth.Shared
+@using vkaudioposter_ef.parser;
+@using System.Net.Http.Json
+@using System.Collections.Generic;
+@using System.Linq;
+
+@using WAAuth.Client.Components
+
+@attribute [Authorize]
+@*@inject IJSRuntime js*@
+@inject HttpClient Http
+
+<h3>StyleCountChart</h3>
+
+@if (PostedTracks == null || Playlists == null)
+{
+    <p><em>Loading...</em></p>
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="300">
+    </MudSkeleton>
+
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="800">
+    </MudSkeleton>
+}
+else
+{
+    <MudPaper Class="pa-4">
+        <MudChart ChartType="ChartType.Bar" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px"></MudChart>
+    </MudPaper>
+
+    <br />
+    @*<MudPaper Class="pa-4">
+            <MudChart ChartType="ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@XAxisLabels"></MudChart>
+        </MudPaper>*@
+
+    <LastPostedTracks PostedTracks="PostedTracks" Playlists="Playlists" />
+}
+@code {
+
+    public double[] data = { };
+    public List<ChartSeries> Series = new List<ChartSeries>();
+    public string[] XAxisLabels = { };
+
+    private IEnumerable<Playlist> Playlists = new List<Playlist>();
+    private IEnumerable<PostedTrack> PostedTracks = new List<PostedTrack>();
+
+    List<string> xLabelsList = new List<string>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ////NavigationManager nm = new NavigationManager();
+        //hubConnection = new HubConnectionBuilder()
+        //    .WithUrl(NavigationManager.ToAbsoluteUri("/broadcastHub"))
+        //    .Build();
+
+        //hubConnection.On("ReceiveMessage", () =>
+        //{
+        //    CallLoadData();
+        //    StateHasChanged();
+        //});
+
+        //await hubConnection.StartAsync();
+
+
+        CallLoadData();
+    }
+
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    static void test(dynamic t)
+    {
+        foreach (var a in t)
+        {
+            Console.WriteLine($"ID: { a.ID}, Count: {a.Count}");
+        }
+    }
+
+
+    protected async Task LoadData()
+    {
+        try
+        {
+            Playlists = await Http.GetFromJsonAsync<List<Playlist>>("Playlists");
+            PostedTracks = await Http.GetFromJsonAsync<List<PostedTrack>>("PostedTracks");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        //foreach (var pT in PostedTracks)
+        //{
+        //    string pName = Playlists.Where(y => y.Id == (int)pT.PlaylistId).Select(x => x.PlaylistName).FirstOrDefault();
+        //    xLabelsList.Add(pName);
+        //}
+
+        var countPerPlaylists =
+            from track in PostedTracks
+            group track by track.PlaylistId into trackGroup
+            orderby trackGroup.Count() descending
+            select new
+            {
+                ID = trackGroup.Key,
+                Count = trackGroup.Count(),
+            };
+
+        countPerPlaylists = countPerPlaylists.Take(60);
+        foreach (var s in countPerPlaylists)
+            await AddToSeries(s);
+
+        XAxisLabels = xLabelsList.Distinct().ToArray();
+
+        PostedTracks = PostedTracks.OrderByDescending(d => d.Date).Take(20);
+        StateHasChanged();
+    }
+
+    protected async Task AddToSeries(dynamic t)
+    {
+        double[] dt = { Convert.ToDouble(t.Count) };
+        string pName = Playlists.Where(y => y.Id == (int)t.ID).Select(x => x.PlaylistName).FirstOrDefault();
+        //Console.WriteLine(pName);
+        xLabelsList.Add(pName);
+        Series.Add(new ChartSeries() { Name = pName, Data = dt });
+    }
+
+}

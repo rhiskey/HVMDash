@@ -1,0 +1,95 @@
+﻿@inherits LayoutComponentBase
+
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudAppBarSpacer />
+        <LoginDisplay/>
+        <MudLink Href="https://vk.com/hvmlabel" Target="_blank">About</MudLink>
+        <MudButton OnClick="@((e) => DarkMode())">Toggle Dark/Light Mode</MudButton>
+        @*<MudSwitch @bind-Checked="str" CheckedChanged="@((e) => DarkMode())" Color="Color.Tertiary">@(str)</MudSwitch>*@
+    </MudAppBar>
+    <MudDrawer @bind-Open="@open" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">HVM</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <NavMenu />
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer Class="content px-4">
+            @*<MudMainContent Class="pt-16 px-16">
+                <MudContainer Class="mt-6">*@
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+
+<MudScrollToTop>
+    <MudFab Color="Color.Tertiary" Icon="@Icons.Filled.ArrowCircleUp" />
+</MudScrollToTop>
+
+<MudThemeProvider Theme="currentTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+@code{
+    bool open = false;
+
+    public string str { get; set; } = "Dark";
+
+    void ToggleDrawer()
+    {
+        open = !open;
+    }
+
+    protected override void OnInitialized()
+    {
+        currentTheme = darkTheme;
+    }
+
+    void DarkMode()
+    {
+        if (currentTheme == defaultTheme)
+        {
+            currentTheme = darkTheme;
+        }
+        else
+        {
+            currentTheme = defaultTheme;
+        }
+    }
+
+    MudTheme currentTheme = new MudTheme();
+    MudTheme defaultTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Black = "#272c34"
+        }
+    };
+
+    MudTheme darkTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Black = "#27272f",
+            Background = "#32333d",
+            BackgroundGrey = "#27272f",
+            Surface = "#373740",
+            DrawerBackground = "#27272f",
+            DrawerText = "rgba(255,255,255, 0.50)",
+            DrawerIcon = "rgba(255,255,255, 0.50)",
+            AppbarBackground = "#27272f",
+            AppbarText = "rgba(255,255,255, 0.70)",
+            TextPrimary = "rgba(255,255,255, 0.70)",
+            TextSecondary = "rgba(255,255,255, 0.50)",
+            ActionDefault = "#adadb1",
+            ActionDisabled = "rgba(255,255,255, 0.26)",
+            ActionDisabledBackground = "rgba(255,255,255, 0.12)"
+        }
+    };
+}

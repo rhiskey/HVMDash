@@ -1,0 +1,218 @@
+﻿@page "/playlistsedit"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using WAAuth.Shared
+@using vkaudioposter_ef.parser;
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+
+@attribute [Authorize]
+@inject HttpClient Http
+
+<h1>Edit Playlists</h1>
+
+
+@if (Playlists == null)
+{
+    <p><em>Loading...</em></p>
+    <MudSkeleton />
+    @*<MudSkeleton SkeletonType="SkeletonType.Circle" Width="50px" Height="50px" />*@
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />
+}
+else
+{
+    <MudExpansionPanels>
+        <MudExpansionPanel MaxHeight="150">
+            <TitleContent>
+                <div class="d-flex">
+                    <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                    <MudText>Create</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MudTr>
+                    <MudTd><MudTextField @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Variant="Variant.Outlined"></MudTextField></MudTd>
+                    <MudTd><MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined"></MudTextField></MudTd>
+
+                    <MudTd>
+                        <MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>
+                    </MudTd>
+                    <MudTd>
+                        <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
+                    </MudTd>
+                </MudTr>
+                <MudTr>
+                    <MudButton Color="Color.Primary" OnClick="@OnCreateClick">Create</MudButton>
+                </MudTr>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <br />
+
+    <MudTable Items="@Playlists" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<Playlist,bool>(FilterFunc)" @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Playlists</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col />
+            <col style="width:10px;" />
+
+            <col style="width:10px;" />
+            <col style="width:50px;" />
+            <col style="width:20px;" />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.PlaylistId)">Spotify URI</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Playlist, object>(x=>x.PlaylistName)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.Mood)">Mood</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.UpdateDate)">UpdateDate</MudTableSortLabel></MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Spotify URI">@context.PlaylistId</MudTd>
+            <MudTd DataLabel="Playlist Name">@context.PlaylistName</MudTd>
+            <MudTd DataLabel="Mood">@context.Mood</MudTd>
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+            <MudTd DataLabel="Update Date">@Formatters.FormatDateTime(context.UpdateDate)</MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="Spotify URI">
+                <MudTextField @bind-Value="@context.PlaylistId" Required />
+            </MudTd>
+            <MudTd DataLabel="Name">
+                <MudTextField @bind-Value="@context.PlaylistName" Required />
+            </MudTd>
+            <MudTd DataLabel="Mood">
+                <MudSlider @bind-Value="@context.Mood" Min="0" Max="10" Color="Color.Info">Value: @context.Mood.ToString()</MudSlider>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudSwitch @bind-Checked="@context.Status" Color="Color.Secondary">int: @context.Status</MudSwitch>
+            </MudTd>
+            <MudTd DataLabel="Update Date">@context.UpdateDate</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Error" OnClick="@(() => DeleteClick(context.Id))">Delete</MudButton>
+            </MudTd>
+        </RowEditingTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+    <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+    <MudSwitch @bind-Checked="@ronly" Color="Color.Tertiary">Read Only</MudSwitch>
+    <MudText Inline="true">Selected: @selectedItem?.PlaylistName</MudText>
+
+    <MudMessageBox @ref="mbox" Title="Warning" CancelText="Cancel">
+        <MessageContent>
+            Deleting can <b><i>not</i></b> be undone!
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+        </YesButton>
+    </MudMessageBox>
+}
+
+@code {
+    MudMessageBox mbox { get; set; }
+    string state = "Message box hasn't been opened yet";
+    //[Parameter] public Playlist playlistToCreate { get; set; }
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool ronly = false;
+    private string searchString = "";
+    private Playlist selectedItem = null;
+    private Playlist playlistToCreate = new Playlist();
+    private HashSet<Playlist> selectedItems = new HashSet<Playlist>();
+
+    private IEnumerable<Playlist> Playlists = new List<Playlist>();
+
+    public int isEnabled { get; set; } = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Playlists = await Http.GetFromJsonAsync<List<Playlist>>("Playlists");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    
+    }
+
+    private bool FilterFunc(Playlist element)
+        {
+            if (string.IsNullOrWhiteSpace(searchString))
+                return true;
+            if (element.PlaylistName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (element.PlaylistId.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                return true;
+            return false;
+        }
+
+        private async Task OnCommitEditClick()
+        {
+            Snackbar.Add("Commit Edit Handler Invoked");
+
+            selectedItem.UpdateDate = DateTime.Now;
+            string reqAdress = $"Playlists/{selectedItem.Id}";
+            var response = await Http.PutAsJsonAsync(reqAdress, selectedItem);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Edited Successfull", Severity.Success);
+                await OnInitializedAsync();
+                StateHasChanged();
+            }
+            else Snackbar.Add($"Error: {response.StatusCode}", Severity.Error);
+        }
+
+        private async Task DeleteClick(int playlistId)
+        {
+            Snackbar.Add("Commit Delete Handler Invoked");
+
+            bool? result = await mbox.Show();
+            state = result == null ? "Cancelled" : "Deleted!";
+            StateHasChanged();
+
+            if (result == true)
+            {
+                string reqAdress = $"Playlists/{playlistId}";
+                var playlist = await Http.GetFromJsonAsync<Playlist>
+    (reqAdress);
+    if (await js.InvokeAsync<bool>
+        ("confirm", $"Do you want to delete {playlist.PlaylistName} ({playlist.Id}) Record?"))
+        {
+        await Http.DeleteAsync($"Playlists/{playlistId}");
+        Snackbar.Add("Deleted Successfull", Severity.Success);
+        await OnInitializedAsync();
+        }
+        }
+        }
+
+        private async Task OnCreateClick()
+        {
+        Snackbar.Add("Create Handler Invoked");
+
+        playlistToCreate.UpdateDate = DateTime.Now;
+
+        var response = await Http.PostAsJsonAsync("Playlists", playlistToCreate);
+        if (response.IsSuccessStatusCode)
+        {
+        Snackbar.Add("Create Successfull", Severity.Success);
+        playlistToCreate = new Playlist();
+        await OnInitializedAsync();
+        StateHasChanged();
+        }
+        else { Snackbar.Add($"Error: {response.StatusCode}", Severity.Error); };
+        }
+
+        }

@@ -1,0 +1,203 @@
+﻿@page "/photostocks"
+@using WAAuth.Shared
+@using vkaudioposter_ef.Model
+@using vkaudioposter_ef.parser
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+@attribute [Authorize]
+@inject HttpClient Http
+
+<h1>Edit Photostocks</h1>
+
+
+@if (photostocks == null)
+{
+    <p><em>Loading...</em></p>
+    <p><em>Loading...</em></p>
+    <MudSkeleton />
+    @*<MudSkeleton SkeletonType="SkeletonType.Circle" Width="50px" Height="50px" />*@
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />
+}
+else
+{
+    <MudExpansionPanels>
+        <MudExpansionPanel MaxHeight="150">
+            <TitleContent>
+                <div class="d-flex">
+                    <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                    <MudText>Create</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MudTr>
+                    <MudTd Style="width:200px"><MudTextField @bind-Value="@stockToCreate.Url" Label="Url" Variant="Variant.Outlined"></MudTextField></MudTd>
+                    <MudTd><MudTextField @bind-Value="@stockToCreate.ParserXpathId" Label="ParserXpathId" Variant="Variant.Outlined"></MudTextField></MudTd>
+                    <MudTd>
+                        <MudSwitch @bind-Checked="@stockToCreate.Status" Color="Color.Secondary">Status: @stockToCreate.Status</MudSwitch>
+                    </MudTd>
+                </MudTr>
+                <MudTr>
+                    <MudButton Color="Color.Primary" OnClick="@OnCreateClick">Create</MudButton>
+                </MudTr>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <br />
+
+    <MudTable Items="@photostocks" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<ConsolePhotostock,bool>(FilterFunc)" @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Photostocks</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col style="width:10px;" />
+            <col style="width:20px;" />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.Url)">URL</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.ParserXpathId)">ParserXpathId</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.UpdateDate)">UpdateDate</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="URL">@context.Url</MudTd>
+            <MudTd DataLabel="ParserXpathId">@context.ParserXpathId</MudTd>
+            <MudTd DataLabel="Status">@context.Status</MudTd>
+            <MudTd DataLabel="Update Date">@Formatters.FormatDateTime(context.UpdateDate)</MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="URL">
+                <MudTextField @bind-Value="@context.Url" Required />
+            </MudTd>
+            <MudTd DataLabel="ParserXpathId">
+                <MudTextField @bind-Value="@context.ParserXpathId" />
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudTextField @bind-Value="@context.Status" />
+                <MudSwitch @bind-Checked="@context.Status" Color="Color.Secondary">int: @context.Status</MudSwitch>
+            </MudTd>
+            <MudTd DataLabel="Update Date">@context.UpdateDate</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Error" OnClick="@(() => DeleteClick(context.Id))">Delete</MudButton>
+            </MudTd>
+        </RowEditingTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+    <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+    <MudSwitch @bind-Checked="@ronly" Color="Color.Tertiary">Read Only</MudSwitch>
+    <MudText Inline="true">Selected: @selectedItem?.Url</MudText>
+
+    <MudMessageBox @ref="mbox" Title="Warning" CancelText="Cancel">
+        <MessageContent>
+            Deleting can <b><i>not</i></b> be undone!
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+        </YesButton>
+    </MudMessageBox>
+}
+
+@code {
+    private IEnumerable<ConsolePhotostock> photostocks = new List<ConsolePhotostock>();
+    private ParserXpath[] parserXpaths;
+    private ConsolePhotostock stockToCreate = new ConsolePhotostock();
+
+    MudMessageBox mbox { get; set; }
+    string state = "Message box hasn't been opened yet";
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool ronly = false;
+    private string searchString = "";
+
+    private ConsolePhotostock selectedItem = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            photostocks = await Http.GetFromJsonAsync<ConsolePhotostock[]>("ConsolePhotostocks");
+            parserXpaths = await Http.GetFromJsonAsync<ParserXpath[]>("ParserXpaths");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private bool FilterFunc(ConsolePhotostock element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Url.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task OnCommitEditClick()
+    {
+        Snackbar.Add("Commit Edit Handler Invoked");
+
+        selectedItem.UpdateDate = DateTime.Now;
+        string reqAdress = $"ConsolePhotostocks/{selectedItem.Id}";
+        var response = await Http.PutAsJsonAsync(reqAdress, selectedItem);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Edited Successfull", Severity.Success);
+            await OnInitializedAsync();
+
+            StateHasChanged();
+        }
+        else Snackbar.Add($"Error: {response.StatusCode}", Severity.Error);
+    }
+
+    private async Task DeleteClick(int Id)
+    {
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            Snackbar.Add("Commit Delete Handler Invoked");
+
+            string reqAdress = $"ConsolePhotostocks/{Id}";
+            var stock = await Http.GetFromJsonAsync<ConsolePhotostock>(reqAdress);
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {stock.Url} ({stock.Id}) Record?"))
+            {
+                await Http.DeleteAsync($"ConsolePhotostocks/{Id}");
+                Snackbar.Add("Deleted Successfull", Severity.Success);
+                await OnInitializedAsync();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnCreateClick()
+    {
+        Snackbar.Add("Create Handler Invoked");
+
+        stockToCreate.UpdateDate = DateTime.Now;
+
+        var response = await Http.PostAsJsonAsync("ConsolePhotostocks", stockToCreate);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Create Successfull", Severity.Success);
+            stockToCreate = new ConsolePhotostock();
+            await OnInitializedAsync();
+            StateHasChanged();
+        }
+        else { Snackbar.Add($"Error: {response.StatusCode}", Severity.Error); };
+    }
+
+}

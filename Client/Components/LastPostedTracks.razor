@@ -1,0 +1,51 @@
+﻿@namespace WAAuth.Client.Components
+@using vkaudioposter_ef.parser;
+@using System.Collections.Generic;
+
+
+<h5>Last posted tracks</h5>
+<MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            @foreach (var h in headings)
+            {
+                <th>@h</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in PostedTracks)
+        {
+            <tr>
+                @*@foreach (var x in row.)
+                    {*@
+                <td>@row.Id</td>
+                <td>@row.MediaId</td>
+                <td>@row.OwnerId</td>
+                <td>@GetPlaylistNameFromId(row.PlaylistId)</td>
+                <td>@row.Trackname</td>
+                <td>@row.Date.ToString("dd.MM.yyy HH:mm")</td>
+
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+
+@code {
+    string[] headings = { "ID", "MediaID", "OwnerID", "Playlist", "Trackname", "Date" };
+
+    [Parameter]
+    public IEnumerable<PostedTrack> PostedTracks { get; set; }
+
+    [Parameter]
+    public IEnumerable<Playlist> Playlists { get; set; }
+    //[Parameter]
+    //public IEnumerable<Playlist> Playlists { get; set; }
+
+
+    private string GetPlaylistNameFromId(int? id)
+    {
+        return Playlists.Where(y => y.Id == (int)id).Select(x=> x.PlaylistName).FirstOrDefault();
+    }
+
+}
