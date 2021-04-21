@@ -1,5 +1,6 @@
 # HVMDash
-Dashboard of music service. Blazor WebAssembly + PWA
+Dashboard of music service. 
+Blazor WebAssembly + PWA + Authentication (IdentityServer)
 
 [![giphy.gif](https://media.giphy.com/media/SsXuhZs8iJlAwaoMcC/giphy.gif)](https://media.giphy.com/media/SsXuhZs8iJlAwaoMcC/giphy.gif)
 
