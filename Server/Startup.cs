@@ -28,13 +28,13 @@ namespace WAAuth.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                            options.UseMySql(
-                Configuration.GetConnectionString("UserConnection")));
+                            options.UseSqlServer(
+                Configuration.GetConnectionString("MSSQL_UserConnection")));
 
-            services.AddDbContext<PlaylistContext>(opt => opt.UseMySql(Configuration.GetConnectionString("EfConnection")));
-            services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseMySql(Configuration.GetConnectionString("EfConnection")));
-            services.AddDbContext<PostedTracksContext>(opt => opt.UseMySql(Configuration.GetConnectionString("EfConnection")));
-            services.AddDbContext<ParserXpathContext>(opt => opt.UseMySql(Configuration.GetConnectionString("EfConnection")));
+            services.AddDbContext<PlaylistContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<PostedTracksContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
