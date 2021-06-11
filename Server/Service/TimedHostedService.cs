@@ -35,6 +35,7 @@ namespace HVMDash.Server.Service
             var count = Interlocked.Increment(ref executionCount);
 
             StartProgram.Start();
+
             _logger.LogInformation(
                 "Timed Hosted Service is working. Count: {Count}", count);
         }
