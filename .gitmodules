@@ -1,3 +1,6 @@
 [submodule "vkaudioposter-ef"]
 	path = vkaudioposter-ef
 	url = https://github.com/rhiskey/vkaudioposter-ef
+[submodule "vkaudioposter_Console"]
+	path = vkaudioposter_Console
+	url = https://github.com/rhiskey/vkaudioposter_Console.git

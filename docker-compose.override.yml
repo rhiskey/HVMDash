@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  hvmdash.server:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Development__Password=106fea89-0a1e-4d64-8930-a88f8da212ed
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=7DA50209-9BA4-419E-9CBB-FDFF5633E936
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/root/.aspnet/https/HVMDash.Server.pfx
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets/:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https/:/root/.aspnet/https:ro
