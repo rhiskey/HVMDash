@@ -1,4 +1,4 @@
-﻿using WAAuth.Shared;
+﻿using HVMDash.Shared;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 //using TableDependency.SqlClient;
 using vkaudioposter_ef.parser;
 
-namespace WAAuth.Server.Data
+namespace HVMDash.Server.Data
 {
     //public class PostedTracksService : IPostedTracksService, IDisposable
     //{
