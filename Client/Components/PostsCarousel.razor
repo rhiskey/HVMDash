@@ -1,0 +1,69 @@
+﻿@namespace HVMDash.Client.Components
+
+@using vkaudioposter_ef.Model
+@using HVMDash.Shared
+
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+@if (Posts.Count == 0 || Posts == null)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    @*<MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />*@
+}
+else
+{
+    <MudCarousel ItemsSource="@Posts" Style="height:850px;" ShowArrows="@arrows" ShowDelimiters="@delimiters" AutoCycle="@autocycle">
+        <ItemTemplate>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Secondary" Image="icon-512.png" Size="Size.Medium">HVM</MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudLink Href="@Formatters.GetHasTagLink(context.Message)" Target="_blank" Typo="Typo.body1" Color="Color.Secondary">@context.Message</MudLink>
+                        <MudText Typo="Typo.body2">@context.PublishDate.ToString("dd.MM.yyy HH:mm")</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+
+                    </CardHeaderActions>
+                </MudCardHeader>
+                @foreach (var photo in context.PostedPhotos)
+                {
+                    var url = photo.Url;
+                    <MudCardMedia Image="@url" Height="600" />
+                }
+                <MudCardContent>
+                    @{var counter = context.PostedTracks.Count + 1;}
+                    Attachments: <MudChip Text="@counter.ToString()" Color="Color.Info">@counter.ToString()</MudChip>
+
+                </MudCardContent>
+                <MudCardActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Default" Link="@Formatters.GetPostLink(context.OwnerId, context.PostId)" Target="_blank" />
+                </MudCardActions>
+            </MudCard>
+        </ItemTemplate>
+    </MudCarousel>
+}
+@code {
+    private List<Post> Posts = new List<Post>();
+
+    private bool arrows = true;
+    private bool delimiters = true;
+    private bool autocycle = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //string req = String.Format("api/Posts?page={0}&pageSize={1}", 1, 5);
+        //Posts = await Http.GetFromJsonAsync<List<Post>>(req);
+        //Posts.OrderByDescending(d => d.Id);
+
+        Posts = await localStorage.GetItemAsync<List<Post>>("lastfiveposts");
+        if(Posts.Count() == 0 || Posts == null)
+        {
+            string req = String.Format("api/Posts?page={0}&pageSize={1}", 1, 5);
+            Posts = await Http.GetFromJsonAsync<List<Post>>(req);
+        }
+        //Posts.Take(5).ToList(); //TODO
+    }
+}

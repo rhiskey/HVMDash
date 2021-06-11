@@ -1,10 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using vkaudioposter_ef.parser;
 
-namespace WAAuth.Server.Context
+namespace HVMDash.Server.Context
 {
     public class ConsolePhotostockContext : DbContext
     {

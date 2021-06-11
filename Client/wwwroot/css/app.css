@@ -48,3 +48,28 @@ a, .btn-link {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+.spinner {
+    border: 16px solid silver;
+    border-top: 16px solid #337AB7;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    animation: spin 700ms linear infinite;
+    left: 0px;
+    top: 0px;
+    top: 40%;
+    left: 45%;
+    position: fixed;
+    z-index: 9999;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg)
+    }
+
+    100% {
+        transform: rotate(360deg)
+    }
+}

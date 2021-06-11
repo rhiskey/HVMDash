@@ -1,55 +1,172 @@
 ﻿@inherits LayoutComponentBase
+@using HVMDash.Shared
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
+
+@*<div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <div class="main">
+            <div class="top-row px-4 auth">
+                <LoginDisplay />
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+
+            <div class="content px-4">
+                @Body
+            </div>
+        </div>
+    </div>*@
 
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <MudAppBarSpacer />
-        <LoginDisplay/>
-        <MudLink Href="https://vk.com/hvmlabel" Target="_blank">About</MudLink>
-        <MudButton OnClick="@((e) => DarkMode())">Toggle Dark/Light Mode</MudButton>
-        @*<MudSwitch @bind-Checked="str" CheckedChanged="@((e) => DarkMode())" Color="Color.Tertiary">@(str)</MudSwitch>*@
+        <AuthorizeView>
+            <Authorized>
+                <MudBadge Content="@ppCount" Color="Color.Primary" Overlap="true" Class="mx-6 my-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Drafts" Color="Color.Default" />
+                </MudBadge>
+            </Authorized>
+        </AuthorizeView>
+        @*<MudToggleIconButton Toggled="@SwitchRoleValue" ToggledChanged="@((bool t) => CheckedRoleChanged(t))"
+            Icon="@Icons.Material.Filled.VerifiedUser" Color="@Color.Error"
+            ToggledIcon="@Icons.Material.Filled.VerifiedUser" ToggledColor="@Color.Success" />*@
+        <MudToggleIconButton Toggled="@SwitchThemeValue" ToggledChanged="@((bool t) => CheckedChanged(t))"
+                             Icon="@Icons.Material.Filled.WbSunny" Color="@Color.Dark"
+                             ToggledIcon="@Icons.Material.Filled.WbSunny" ToggledColor="@Color.Primary" />
+        @*<MudSwitch Checked="@SwitchRoleValue" CheckedChanged="@((bool t) => CheckedRoleChanged(t))" Color="Color.Warning" Label="@(SwitchRoleValue ? "Admin" : "User")"></MudSwitch>*@
+        @*<MudSwitch Checked="@SwitchThemeValue" CheckedChanged="@((bool t) => CheckedChanged(t))" Color="Color.Secondary" Label="@(SwitchThemeValue ? "Dark On" : "Dark Off")"></MudSwitch>*@
+        <MudAppBarSpacer />
+        <MudLink Href="https://github.com/rhiskey/HVMDash" Target="_blank">
+            <MudToggleIconButton Toggled="@SwitchThemeValue" ToggledChanged="@((bool t) => CheckedChanged(t))"
+                                 Icon="@Icons.Custom.Brands.GitHub" Color="@Color.Tertiary"
+                                 ToggledIcon="@Icons.Custom.Brands.GitHub" ToggledColor="@Color.Info" />
+        </MudLink>
+        <MudLink Href="https://t.me/hvmlabel" Target="_blank">
+            <MudToggleIconButton Toggled="@SwitchThemeValue" ToggledChanged="@((bool t) => CheckedChanged(t))"
+                                 Icon="@Icons.Custom.Brands.Telegram" Color="@Color.Tertiary"
+                                 ToggledIcon="@Icons.Custom.Brands.Telegram" ToggledColor="@Color.Info" />
+        </MudLink>
+        <MudLink Href="https://vk.com/hvmlabel" Target="_blank" Color="Color.Secondary">
+            <MudToggleIconButton Toggled="@SwitchThemeValue" ToggledChanged="@((bool t) => CheckedChanged(t))"
+                                 Icon="@Icons.Material.Filled.Info" Color="@Color.Tertiary"
+                                 ToggledIcon="@Icons.Material.Filled.Info" ToggledColor="@Color.Info" />
+        </MudLink>
+        <LoginDisplay />
     </MudAppBar>
-    <MudDrawer @bind-Open="@open" Elevation="1">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">HVM</MudText>
-        </MudDrawerHeader>
-        <MudNavMenu>
-            <NavMenu />
-        </MudNavMenu>
-    </MudDrawer>
-    <MudMainContent>
-        <MudContainer Class="content px-4">
-            @*<MudMainContent Class="pt-16 px-16">
-                <MudContainer Class="mt-6">*@
-            @Body
-        </MudContainer>
-    </MudMainContent>
+    <MudSwipeArea OnSwipe="@OnSwipe" Style="width: 100%;">
+        <MudDrawer @bind-Open="@_drawerOpen" Elevation="1">
+            <MudDrawerHeader>
+                <MudLink Href=""><MudText Typo="Typo.h6">HVM</MudText></MudLink>
+            </MudDrawerHeader>
+            <MudNavMenu>
+                <NavMenu IsAdmin="@SwitchRoleValue" />
+            </MudNavMenu>
+        </MudDrawer>
+        <MudMainContent>
+            <MudContainer Class="content px-4">
+                @*<MudMainContent Class="pt-16 px-16">
+                    <MudContainer Class="mt-6">*@
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudSwipeArea>
 </MudLayout>
 
 
 <MudScrollToTop>
-    <MudFab Color="Color.Tertiary" Icon="@Icons.Filled.ArrowCircleUp" />
+    <MudFab Color="Color.Primary" Icon="@Icons.Filled.ArrowCircleUp" />
 </MudScrollToTop>
 
 <MudThemeProvider Theme="currentTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@code{
-    bool open = false;
+
+@code {
+    [CascadingParameter] protected MudTheme currentTheme { get; set; }
+    [CascadingParameter] protected MudTheme defaultTheme { get; set; }
+    [CascadingParameter] protected MudTheme darkTheme { get; set; }
+
+
+    bool _drawerOpen = false;
+    //bool isAdmin = false;
 
     public string str { get; set; } = "Dark";
 
+    public bool SwitchThemeValue { get; set; } = true;
+    public bool SwitchRoleValue { get; set; } = true;
+
+    public int ppCount { get; set; }
+
     void ToggleDrawer()
     {
-        open = !open;
+        _drawerOpen = !_drawerOpen;
     }
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
+        defaultTheme = new MudTheme()
+        {
+            Palette = new Palette()
+            {
+                Black = "#272c34"
+            }
+        };
+
+        darkTheme = new MudTheme()
+        {
+            Palette = new Palette()
+            {
+                Black = "#27272f",
+                Background = "#32333d",
+                BackgroundGrey = "#27272f",
+                Surface = "#373740",
+                DrawerBackground = "#27272f",
+                DrawerText = "rgba(255,255,255, 0.50)",
+                DrawerIcon = "rgba(255,255,255, 0.50)",
+                AppbarBackground = "#27272f",
+                AppbarText = "rgba(255,255,255, 0.70)",
+                TextPrimary = "rgba(255,255,255, 0.70)",
+                TextSecondary = "rgba(255,255,255, 0.50)",
+                ActionDefault = "#adadb1",
+                ActionDisabled = "rgba(255,255,255, 0.26)",
+                ActionDisabledBackground = "rgba(255,255,255, 0.12)",
+            }
+        };
+
         currentTheme = darkTheme;
+
+        try
+        {
+            await FetchAllPostsAndCount();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            //exception.Redirect();
+        }
+
     }
+
+    //protected override async void OnAfterRender(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        //ppCount = 0;
+    //        //await FetchPPCount();
+    //    }
+    //    else
+    //    {
+    //        //ppCount = -1;
+    //        await FetchPPCount();
+    //    }
+    //}
 
     void DarkMode()
     {
@@ -63,33 +180,54 @@
         }
     }
 
-    MudTheme currentTheme = new MudTheme();
-    MudTheme defaultTheme = new MudTheme()
+    void CheckedRoleChanged(bool t)
     {
-        Palette = new Palette()
+        if (SwitchRoleValue == true)
         {
-            Black = "#272c34"
+            SwitchRoleValue = false;
         }
-    };
+        else
+        {
+            SwitchRoleValue = true;
+        }
+    }
+    void CheckedChanged(bool t)
+    {
+        if (currentTheme == defaultTheme)
+        {
+            currentTheme = darkTheme;
+            SwitchThemeValue = true;
+        }
+        else
+        {
+            currentTheme = defaultTheme;
+            SwitchThemeValue = false;
+        }
+    }
 
-    MudTheme darkTheme = new MudTheme()
+    public void OnSwipe(SwipeDirection direction)
     {
-        Palette = new Palette()
+        if (direction == SwipeDirection.LeftToRight && !_drawerOpen)
         {
-            Black = "#27272f",
-            Background = "#32333d",
-            BackgroundGrey = "#27272f",
-            Surface = "#373740",
-            DrawerBackground = "#27272f",
-            DrawerText = "rgba(255,255,255, 0.50)",
-            DrawerIcon = "rgba(255,255,255, 0.50)",
-            AppbarBackground = "#27272f",
-            AppbarText = "rgba(255,255,255, 0.70)",
-            TextPrimary = "rgba(255,255,255, 0.70)",
-            TextSecondary = "rgba(255,255,255, 0.50)",
-            ActionDefault = "#adadb1",
-            ActionDisabled = "rgba(255,255,255, 0.26)",
-            ActionDisabledBackground = "rgba(255,255,255, 0.12)"
+            _drawerOpen = true;
+            StateHasChanged();
         }
-    };
+        else if (direction == SwipeDirection.RightToLeft && _drawerOpen)
+        {
+            _drawerOpen = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task FetchAllPostsAndCount()
+    {
+        var ppPosts = await Http.GetFromJsonAsync<List<Post>>("api/Posts");
+        ppCount = ppPosts.Count;
+        await localStorage.SetItemAsync("ppCount", ppPosts.Count);
+        var lastFivePosts = ppPosts.Take(5).ToList();
+        //await localStorage.SetItemAsync("posts", ppPosts);
+        await localStorage.SetItemAsync("lastfiveposts", lastFivePosts);
+        StateHasChanged();
+    }
+
 }

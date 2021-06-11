@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using HVMDash.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WAAuth.Shared;
 
-namespace WAAuth.Server.Controllers
+namespace HVMDash.Server.Controllers
 {
     [Authorize]
     [ApiController]

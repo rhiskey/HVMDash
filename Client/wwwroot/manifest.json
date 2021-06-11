@@ -1,6 +1,6 @@
 {
-  "name": "WAAuth",
-  "short_name": "WAAuth",
+  "name": "HVMDash",
+  "short_name": "HVMDash",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

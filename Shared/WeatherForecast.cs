@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WAAuth.Shared
+namespace HVMDash.Shared
 {
     public class WeatherForecast
     {

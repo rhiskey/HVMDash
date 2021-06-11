@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace WAAuth.Server.Controllers
+namespace HVMDash.Server.Controllers
 {
     public class OidcConfigurationController : Controller
     {

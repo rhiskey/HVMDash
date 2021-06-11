@@ -1,0 +1,95 @@
+﻿@page "/CountOfPostsChart"
+
+@namespace HVMDash.Client.Components.Charts
+
+@using HVMDash.Shared
+@using vkaudioposter_ef.parser;
+@using System.Net.Http.Json
+@using System.Collections.Generic;
+@using System.Linq;
+
+@inject HttpClient Http
+
+<h3>CountOfPostsChart</h3>
+
+<MudChart ChartType="ChartType.Line" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350" ChartOptions="options"></MudChart>
+@*<MudButton @onclick="RandomizeData">Randomize Data</MudButton>*@
+<MudMenu Label="Interpolation Algorithm" FullWidth="true">
+    <MudMenuItem OnClick="() => OnClickMenu(InterpolationOption.NaturalSpline)">Natural Spline</MudMenuItem>
+    <MudMenuItem OnClick="() => OnClickMenu(InterpolationOption.EndSlope)">End Slope</MudMenuItem>
+    <MudMenuItem OnClick="() => OnClickMenu(InterpolationOption.Periodic)">Periodic</MudMenuItem>
+</MudMenu>
+
+@code {
+    [Parameter]
+    public IEnumerable<Post> Posts { get; set; }
+
+    private ChartOptions options = new ChartOptions();
+    public List<ChartSeries> Series = new List<ChartSeries>();
+    public string[] XAxisLabels = { };
+    List<string> xLabelsList = new List<string>();
+
+    Random random = new Random();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Posts = await Http.GetFromJsonAsync<List<Post>>("api/Posts");
+        Posts = Posts.OrderByDescending(d => d.Id).Take(5);
+
+        options.InterpolationOption = InterpolationOption.NaturalSpline;
+        options.YAxisFormat = "c2";
+        DrawChart();
+    }
+
+    void OnClickMenu(InterpolationOption interpolationOption)
+    {
+        options.InterpolationOption = interpolationOption;
+        StateHasChanged();
+    }
+
+    protected void DrawChart()
+    {
+
+        //    var data = Posts
+        //.AsEnumerable()
+        //.GroupBy(o => o.PublishDate)
+        //.Select(g => new { DayOfWeek = g.Key, Count = g.Count() })
+        //.ToList();
+
+        var userTimes =
+        from t in Posts.AsEnumerable()
+        group t by new { t.Id, WeekNumber = (t.PublishDate - DateTime.Now).Days / 7 } into ut
+        select new
+        {
+            ID = ut.Key.Id,
+            Count = ut.Key.WeekNumber,
+            //Minutes = ut.Sum(t => t.Minutes)
+        };
+
+        //var countPerWeek
+        //from post in Posts
+        //orderby post. descending
+        //select new
+        //{
+        //    ID = post.Id,
+        //    Count = post.Count
+        //};
+
+        var countPerWeek = userTimes.Take(100);
+
+        foreach (var s in countPerWeek)
+            AddToSeries(s);
+
+        XAxisLabels = xLabelsList.Distinct().ToArray();
+    }
+
+
+    protected void AddToSeries(dynamic t)
+    {
+        double[] dt = { Convert.ToDouble(t.Count) };
+        string pName = Posts.Where(y => y.Id == (int)t.ID).Select(x => x.Message).FirstOrDefault();
+        xLabelsList.Add(pName);
+        Series.Add(new ChartSeries() { Name = pName, Data = dt });
+    }
+}

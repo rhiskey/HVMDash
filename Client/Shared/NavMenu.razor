@@ -6,8 +6,14 @@
         <MudNavLink Match="NavLinkMatch.All" Href="">Home</MudNavLink>
     </MudListItem>
     <MudDivider />
+
     <AuthorizeView>
         <Authorized>
+            <MudListItem Icon="@Icons.Filled.PostAdd">
+                <MudNavLink Match="NavLinkMatch.All" Href="Posts">Posts</MudNavLink>
+            </MudListItem>
+
+
             <MudListItem Icon="@Icons.Material.Filled.Edit" Text="Edit" InitiallyExpanded="true">
                 <NestedList>
                     <MudListItem Icon="@Icons.Filled.LibraryMusic">
@@ -18,16 +24,25 @@
                     </MudListItem>
                 </NestedList>
             </MudListItem>
+
         </Authorized>
-        <NotAuthorized>
-        </NotAuthorized>
     </AuthorizeView>
+
     <MudDivider />
-    <MudListItem Icon="@Icons.Filled.BarChart">
-        <MudNavLink Match="NavLinkMatch.All" Href="Charts">Charts</MudNavLink>
+    <MudListItem Icon="@Icons.Filled.BarChart" Text="Charts" InitiallyExpanded="true">
+        <NestedList>
+            <MudListItem Icon="@Icons.Filled.BarChart">
+                <MudNavLink Match="NavLinkMatch.All" Href="Charts">StyleCount</MudNavLink>
+            </MudListItem>
+            <MudListItem Icon="@Icons.Filled.StackedLineChart">
+                <MudNavLink Match="NavLinkMatch.All" Href="CountOfPostsChart" Disabled="true">PostsCount</MudNavLink>
+            </MudListItem>
+        </NestedList>
     </MudListItem>
 </MudList>
 
 @code {
 
+    [Parameter]
+    public bool IsAdmin { get; set; }
 }

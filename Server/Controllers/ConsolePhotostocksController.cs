@@ -1,25 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using HVMDash.Server.Context;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WAAuth.Server.Context;
+using Microsoft.Extensions.Caching.Memory;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using vkaudioposter_ef.parser;
-using Microsoft.AspNetCore.Authorization;
 
-namespace WAAuth.Server.Controllers
+namespace HVMDash.Server.Controllers
 {
     [Authorize]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ConsolePhotostocksController : ControllerBase
     {
         private readonly ConsolePhotostockContext _context;
+        private readonly IMemoryCache memoryCache;
+        private readonly string cacheKey = "AllPhotostocks";
 
-        public ConsolePhotostocksController(ConsolePhotostockContext context)
+        private readonly MemoryCacheEntryOptions cacheExpiryOptions = new()
         {
+            AbsoluteExpiration = DateTime.Now.AddDays(7),
+            Priority = CacheItemPriority.High,
+            SlidingExpiration = TimeSpan.FromDays(3)
+        };
+
+        public ConsolePhotostocksController(IMemoryCache memoryCache, ConsolePhotostockContext context)
+        {
+            this.memoryCache = memoryCache;
             _context = context;
         }
 
@@ -27,7 +38,15 @@ namespace WAAuth.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ConsolePhotostock>>> GetPhotostocks()
         {
-            return await _context.Photostocks.ToListAsync();
+            List<ConsolePhotostock> stock1;
+            if (!memoryCache.TryGetValue(cacheKey, out IEnumerable<ConsolePhotostock> _))
+            {
+                stock1 = await _context.Photostocks.ToListAsync();
+                memoryCache.Set(cacheKey, stock1, cacheExpiryOptions);
+                return stock1;
+            }
+            memoryCache.TryGetValue(cacheKey, out stock1);
+            return stock1;
         }
 
         // GET: api/ConsolePhotostocks/5
@@ -42,6 +61,18 @@ namespace WAAuth.Server.Controllers
             }
 
             return consolePhotostock;
+        }
+
+        // GET: api/ConsolePhotostocks/export
+        [HttpGet("export")]
+        public async Task<JsonResult> ExportPhotostocks()
+        {
+            List<ConsolePhotostock> data = new();
+
+            data = await _context.Photostocks.OrderBy(p => p.Status).ToListAsync();
+            var jsonString = JsonSerializer.Serialize(data);
+
+            return new JsonResult(jsonString);
         }
 
         // PUT: api/ConsolePhotostocks/5
@@ -71,7 +102,7 @@ namespace WAAuth.Server.Controllers
                     throw;
                 }
             }
-
+            memoryCache.Remove(cacheKey);
             return NoContent();
         }
 
@@ -80,16 +111,18 @@ namespace WAAuth.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<ConsolePhotostock>> PostConsolePhotostock(ConsolePhotostock consolePhotostock)
         {
+            memoryCache.Remove(cacheKey);
             _context.Photostocks.Add(consolePhotostock);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetConsolePhotostock", new { id = consolePhotostock.Id }, consolePhotostock);
+            return CreatedAtAction("PostConsolePhotostock", new { id = consolePhotostock.Id }, consolePhotostock);
         }
 
         // DELETE: api/ConsolePhotostocks/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteConsolePhotostock(int id)
         {
+            memoryCache.Remove(cacheKey);
             var consolePhotostock = await _context.Photostocks.FindAsync(id);
             if (consolePhotostock == null)
             {

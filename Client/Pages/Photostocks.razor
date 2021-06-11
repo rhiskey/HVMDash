@@ -1,54 +1,129 @@
 ﻿@page "/photostocks"
-@using WAAuth.Shared
+@namespace HVMDash.Client.Pages
+@using HVMDash.Shared
 @using vkaudioposter_ef.Model
 @using vkaudioposter_ef.parser
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.IO
+@using System.Text.Json
 
 @inject ISnackbar Snackbar
 @inject IJSRuntime js
-@attribute [Authorize]
+
 @inject HttpClient Http
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@*@attribute [Authorize]*@
 
 <h1>Edit Photostocks</h1>
 
 
-@if (photostocks == null)
-{
-    <p><em>Loading...</em></p>
-    <p><em>Loading...</em></p>
-    <MudSkeleton />
-    @*<MudSkeleton SkeletonType="SkeletonType.Circle" Width="50px" Height="50px" />*@
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />
-}
-else
-{
-    <MudExpansionPanels>
-        <MudExpansionPanel MaxHeight="150">
-            <TitleContent>
-                <div class="d-flex">
-                    <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
-                    <MudText>Create</MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
+<MudExpansionPanels>
+    <MudExpansionPanel>
+        <TitleContent>
+            <div class="d-flex">
+                <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                <MudText>Create</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
                 <MudTr>
-                    <MudTd Style="width:200px"><MudTextField @bind-Value="@stockToCreate.Url" Label="Url" Variant="Variant.Outlined"></MudTextField></MudTd>
-                    <MudTd><MudTextField @bind-Value="@stockToCreate.ParserXpathId" Label="ParserXpathId" Variant="Variant.Outlined"></MudTextField></MudTd>
+                    <MudTd>
+
+                        <MudTextField @bind-Value="@stockToCreate.Url" Label="Url" Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="URL is required!"></MudTextField>
+
+                    </MudTd>
+                    @*<MudTd><MudTooltip Text="Entity ID"><MudTextField @bind-Value="@stockToCreate.ParserXpathId" Label="ParserXpathId" Variant="Variant.Outlined"></MudTextField></MudTooltip></MudTd>*@
+                    <MudTd>
+                        <MudSwitch @bind-Checked="@stockToCreate.Status" Color="Color.Secondary">Status: @stockToCreate.Status</MudSwitch>
+                    </MudTd>
+                    <MudTd>
+                        <MudSelect @bind-Value="parserXpathToLink" Label="Xpath" Required="true">
+                            @foreach (var xpath in parserXpaths)
+                            {
+                                <MudSelectItem Value="xpath">@xpath.Xpath</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
+                </MudTr>
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+                <MudTr>
+                    <MudTd>
+                        <MudTextField @bind-Value="@stockToCreate.Url" Label="Url" Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="URL is required!"></MudTextField>
+                    </MudTd>
+                </MudTr>
+                @*<MudTr>
+                        <MudTd><MudTextField @bind-Value="@stockToCreate.ParserXpathId" Label="ParserXpathId" Variant="Variant.Outlined"></MudTextField></MudTd>
+                    </MudTr>*@
+                <MudTr>
                     <MudTd>
                         <MudSwitch @bind-Checked="@stockToCreate.Status" Color="Color.Secondary">Status: @stockToCreate.Status</MudSwitch>
                     </MudTd>
                 </MudTr>
                 <MudTr>
-                    <MudButton Color="Color.Primary" OnClick="@OnCreateClick">Create</MudButton>
+                    <MudTd>
+                        <MudSelect @bind-Value="parserXpathToLink" Label="Xpath">
+                            @foreach (var xpath in parserXpaths)
+                            {
+                                <MudSelectItem Value="xpath">@xpath.Xpath</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudTd>
                 </MudTr>
-            </ChildContent>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+            </MudHidden>
+            <br />
+            <MudTr>
+                <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" OnClick="@OnCreateClick" Variant="Variant.Filled">Create</MudButton>
+            </MudTr>
+            <br />
+        </ChildContent>
+    </MudExpansionPanel>
 
-    <br />
+    <MudExpansionPanel>
+        <TitleContent>
+            <div class="d-flex">
+                <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                <MudText>Create Xpath</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField @bind-Value="@xpathToCreate.Xpath" Label="Xpath" Variant="Variant.Outlined" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="@xpathToCreate.XpathInner" Label="Xpath Inner" Variant="Variant.Outlined" Required="false"></MudTextField>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateXpathClick">Create</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <br />
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
-    <MudTable Items="@photostocks" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<ConsolePhotostock,bool>(FilterFunc)" @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
+<br />
+
+@if (photostocks == null || photostocks.Count() == 0)
+{
+    <p><em>Loading...</em></p>
+    <MudSkeleton />
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />
+    @*<MudProgressCircular Color="Color.Default" Indeterminate="true" />*@
+}
+else
+{
+
+    <MudTable Items="@photostocks" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<ConsolePhotostock, bool>(FilterFunc)" @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Photostocks</MudText>
             <MudToolBarSpacer />
@@ -57,33 +132,52 @@ else
         <ColGroup>
             <col />
             <col style="width:10px;" />
-            <col style="width:20px;" />
+            @*<col style="width:10px;" />*@
+            <col />
             <col />
         </ColGroup>
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.Url)">URL</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.ParserXpathId)">ParserXpathId</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x=>x.UpdateDate)">UpdateDate</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x => x.Url)">URL</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x => x.ParserXpathId)">ParserXpathId</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ConsolePhotostock, object>(x => x.UpdateDate)">UpdateDate</MudTableSortLabel></MudTh>
+            <MudTh colspan="2">Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="URL">@context.Url</MudTd>
-            <MudTd DataLabel="ParserXpathId">@context.ParserXpathId</MudTd>
-            <MudTd DataLabel="Status">@context.Status</MudTd>
+            <MudTd DataLabel="URL"><MudLink Target="_blank" Href="@context.Url"><MudHighlighter Text="@context.Url" HighlightedText="@searchString" /></MudLink></MudTd>
+            <MudTd DataLabel="ParserXpath">@context.ParserXpathId</MudTd>
+            <MudTd DataLabel="Status">
+                @switch (context.Status)
+                    {
+                        case 0:
+                            {<MudText Color="Color.Error">Off</MudText>}
+                            break;
+                        case 1:
+                            { <MudText Color="Color.Success">On</MudText>}
+                            break;
+                        default:
+                            break;
+                    }
+            </MudTd>
             <MudTd DataLabel="Update Date">@Formatters.FormatDateTime(context.UpdateDate)</MudTd>
         </RowTemplate>
         <RowEditingTemplate>
             <MudTd DataLabel="URL">
                 <MudTextField @bind-Value="@context.Url" Required />
             </MudTd>
-            <MudTd DataLabel="ParserXpathId">
-                <MudTextField @bind-Value="@context.ParserXpathId" />
+            <MudTd DataLabel="ParserXpath">
+                @*<MudSelect @bind-Value="@context.ParserXpath" Label="Xpath">
+                        @foreach (var xpath in parserXpaths)
+                            {
+                            <MudSelectItem Value="xpath.Id">@xpath.Id</MudSelectItem>
+                            }
+                    </MudSelect>*@
+                <MudTextField @bind-Value="@context.ParserXpathId" Required />
             </MudTd>
             <MudTd DataLabel="Status">
-                <MudTextField @bind-Value="@context.Status" />
                 <MudSwitch @bind-Checked="@context.Status" Color="Color.Secondary">int: @context.Status</MudSwitch>
             </MudTd>
-            <MudTd DataLabel="Update Date">@context.UpdateDate</MudTd>
+            <MudTd DataLabel="Update Date">@Formatters.FormatDateTime(context.UpdateDate)</MudTd>
             <MudTd>
                 <MudButton Color="Color.Error" OnClick="@(() => DeleteClick(context.Id))">Delete</MudButton>
             </MudTd>
@@ -105,33 +199,149 @@ else
             <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
         </YesButton>
     </MudMessageBox>
+
+    <br />
+
 }
+@if (parserXpaths.Count() == 0 || parserXpaths == null) { }
+else
+{
+    <MudTable Items="@parserXpaths" @bind-SelectedItem="selectedXpathItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitXpathEditClick">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Xpaths</MudText>
+            <MudToolBarSpacer />
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col />
+            @*<col style="width:10px;" />*@
+            <col />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<ParserXpath, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ParserXpath, object>(x=>x.Xpath)">Xpath</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ParserXpath, object>(x=>x.XpathInner)">XpathInner</MudTableSortLabel></MudTh>
+            <MudTh colspan="2">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Xpath">@context.Xpath</MudTd>
+            <MudTd DataLabel="XpathInner">@context.XpathInner</MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="Id"><MudField Variant="Variant.Text">@context.Id</MudField></MudTd>
+            <MudTd DataLabel="Xpath*">
+                <MudTextField @bind-Value="@context.Xpath" />
+            </MudTd>
+            <MudTd DataLabel="XpathInner">
+                @*<MudSelect @bind-Value="@context.ParserXpathId" Label="Xpath">
+                        @foreach (var xpath in parserXpaths)
+                            {
+                            <MudSelectItem Value="xpath.Id">@xpath.Id</MudSelectItem>
+                            }
+                    </MudSelect>*@
+                <MudTextField @bind-Value="@context.XpathInner" />
+            </MudTd>
+            <MudTd>
+                <MudButton Color="Color.Error" OnClick="@(() => DeleteXpathClick(context.Id))">Delete</MudButton>
+            </MudTd>
+        </RowEditingTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudText Color="Color.Warning">* Xpath without symbols screening \"</MudText>
+}
+
+
+<InputFile id="fileInput112" OnChange="UploadFileStock" hidden accept=".json" /> @*multiple*@
+<InputFile id="fileInput113" OnChange="UploadFileXpath" hidden accept=".json" /> @*multiple*@
+
+<MudButtonGroup Color="Color.Primary" Variant="Variant.Text">
+    <MudButton HtmlTag="label"
+               StartIcon="@Icons.Filled.CloudUpload"
+               for="fileInput112">
+        Import Photostock
+    </MudButton>
+    <MudButton OnClick="@(() => ExportPhotostockData())"
+               StartIcon="@Icons.Filled.ImportExport">
+        Export Photostock
+    </MudButton>
+    <MudButton HtmlTag="label1"
+               StartIcon="@Icons.Filled.CloudUpload"
+               for="fileInput113">
+        Import Xpath
+    </MudButton>
+    <MudButton OnClick="@(() => ExportXpathData())"
+               StartIcon="@Icons.Filled.ImportExport">
+        Export Xpath
+    </MudButton>
+</MudButtonGroup>
+
+<MudMessageBox @ref="mboxImport" Title="Warning" CancelText="Cancel">
+    <MessageContent>
+        Importing photostocks...
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.UploadFile">Upload!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="mboxImportXpath" Title="Warning" CancelText="Cancel">
+    <MessageContent>
+        Importing xpaths...
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.UploadFile">Upload!</MudButton>
+    </YesButton>
+</MudMessageBox>
+<br />
+<br />
 
 @code {
     private IEnumerable<ConsolePhotostock> photostocks = new List<ConsolePhotostock>();
-    private ParserXpath[] parserXpaths;
+    private IEnumerable<ParserXpath> parserXpaths = new List<ParserXpath>();
     private ConsolePhotostock stockToCreate = new ConsolePhotostock();
+
+    private ParserXpath xpathToCreate = new ParserXpath();
+    private ParserXpath parserXpathToLink, parserXpathToLinkEdit = new ParserXpath();
 
     MudMessageBox mbox { get; set; }
     string state = "Message box hasn't been opened yet";
 
     private bool dense = false;
     private bool hover = true;
-    private bool ronly = false;
+    [Parameter]
+    public bool ronly { get; set; }
     private string searchString = "";
 
     private ConsolePhotostock selectedItem = null;
+    private ParserXpath selectedXpathItem = null;
+
+    private IJSObjectReference module;
+    MudMessageBox mboxImport { get; set; }
+    MudMessageBox mboxImportXpath { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            photostocks = await Http.GetFromJsonAsync<ConsolePhotostock[]>("ConsolePhotostocks");
-            parserXpaths = await Http.GetFromJsonAsync<ParserXpath[]>("ParserXpaths");
+            photostocks = await Http.GetFromJsonAsync<ConsolePhotostock[]>("api/ConsolePhotostocks");
+            parserXpaths = await Http.GetFromJsonAsync<ParserXpath[]>("api/ParserXpaths");
         }
         catch (AccessTokenNotAvailableException exception)
         {
             exception.Redirect();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await js.InvokeAsync<IJSObjectReference>("import",
+                "./js/SaveFile.js");
         }
     }
 
@@ -144,23 +354,45 @@ else
         return false;
     }
 
+    private bool FilterFunc(ParserXpath element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Xpath.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
     private async Task OnCommitEditClick()
     {
         Snackbar.Add("Commit Edit Handler Invoked");
 
-        selectedItem.UpdateDate = DateTime.Now;
-        string reqAdress = $"ConsolePhotostocks/{selectedItem.Id}";
+        selectedItem.UpdateDate = DateTime.Now; //TODO
+                                                //selectedItem.ParserXpathId = parserXpathToLinkEdit;
+        string reqAdress = $"api/ConsolePhotostocks/{selectedItem.Id}";
         var response = await Http.PutAsJsonAsync(reqAdress, selectedItem);
         if (response.IsSuccessStatusCode)
         {
             Snackbar.Add("Edited Successfull", Severity.Success);
+            parserXpathToLinkEdit = new ParserXpath();
             await OnInitializedAsync();
-
-            StateHasChanged();
         }
         else Snackbar.Add($"Error: {response.StatusCode}", Severity.Error);
     }
 
+    private async Task OnCommitXpathEditClick()
+    {
+        Snackbar.Add("Commit Edit Handler Invoked");
+
+        string reqAdress = $"api/ParserXpaths/{selectedXpathItem.Id}";
+        var response = await Http.PutAsJsonAsync(reqAdress, selectedXpathItem);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Edited Successfull", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else Snackbar.Add($"Error: {response.StatusCode}", Severity.Error);
+    }
     private async Task DeleteClick(int Id)
     {
         bool? result = await mbox.Show();
@@ -171,14 +403,34 @@ else
         {
             Snackbar.Add("Commit Delete Handler Invoked");
 
-            string reqAdress = $"ConsolePhotostocks/{Id}";
+            string reqAdress = $"api/ConsolePhotostocks/{Id}";
             var stock = await Http.GetFromJsonAsync<ConsolePhotostock>(reqAdress);
             if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {stock.Url} ({stock.Id}) Record?"))
             {
-                await Http.DeleteAsync($"ConsolePhotostocks/{Id}");
+                await Http.DeleteAsync($"api/ConsolePhotostocks/{Id}");
                 Snackbar.Add("Deleted Successfull", Severity.Success);
                 await OnInitializedAsync();
-                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task DeleteXpathClick(int Id)
+    {
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            Snackbar.Add("Commit Delete Handler Invoked");
+
+            string reqAdress = $"api/ParserXpaths/{Id}";
+            var xpath = await Http.GetFromJsonAsync<ParserXpath>(reqAdress);
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {xpath.Id} ({xpath.Xpath}) Record?"))
+            {
+                await Http.DeleteAsync($"api/ParserXpaths/{Id}");
+                Snackbar.Add("Deleted Successfull", Severity.Success);
+                await OnInitializedAsync();
             }
         }
     }
@@ -187,17 +439,176 @@ else
     {
         Snackbar.Add("Create Handler Invoked");
 
-        stockToCreate.UpdateDate = DateTime.Now;
-
-        var response = await Http.PostAsJsonAsync("ConsolePhotostocks", stockToCreate);
+        stockToCreate.UpdateDate = DateTime.Now; //TODO
+                                                 //stockToCreate.ParserXpath = parserXpathToLink;
+        stockToCreate.ParserXpathId = parserXpathToLink.Id;
+        var response = await Http.PostAsJsonAsync("api/ConsolePhotostocks", stockToCreate);
         if (response.IsSuccessStatusCode)
         {
             Snackbar.Add("Create Successfull", Severity.Success);
             stockToCreate = new ConsolePhotostock();
-            await OnInitializedAsync();
+            parserXpathToLink = new ParserXpath();
             StateHasChanged();
+            await OnInitializedAsync();
         }
         else { Snackbar.Add($"Error: {response.StatusCode}", Severity.Error); };
     }
 
+    private async Task OnCreateXpathClick()
+    {
+        Snackbar.Add("Create Handler Invoked");
+
+        //xpathToCreate.UpdateDate = DateTime.Now.AddHours(3); //TODO
+
+        var response = await Http.PostAsJsonAsync("api/ParserXpaths", xpathToCreate);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Create Successfull", Severity.Success);
+            xpathToCreate = new ParserXpath();
+            StateHasChanged();
+            await OnInitializedAsync();
+        }
+        else { Snackbar.Add($"Error: {response.StatusCode}", Severity.Error); };
+    }
+
+    private IEnumerable<string> CheckUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            yield return "URL is required!";
+            yield break;
+        }
+
+        if (!Regex.IsMatch(url, @"https://www.deviantart.com/topic/(\w*)", RegexOptions.IgnoreCase))
+            yield return "URL must be subdomain of devianart.com/topic";
+
+        foreach (var url1 in photostocks)
+        {
+            if (url1.Url == url)
+                yield return "URL already exist!";
+        }
+    }
+
+    private async void ExportPhotostockData()
+    {
+        string exportFileName = "exportPhotostocks_" + DateTime.Now.ToString("dd_MM_yyyy") + ".json";
+
+        var json = await Http.GetFromJsonAsync<string>("api/ConsolePhotostocks/export");
+
+        await module.InvokeAsync<object>("FileSaveAs",
+        exportFileName,
+        json);
+    }
+
+    private async void ExportXpathData()
+    {
+        string exportFileName = "exportXpaths_" + DateTime.Now.ToString("dd_MM_yyyy") + ".json";
+
+        var json = await Http.GetFromJsonAsync<string>("api/ParserXpaths/export");
+
+        await module.InvokeAsync<object>("FileSaveAs",
+        exportFileName,
+        json);
+    }
+
+    private async void UploadFileStock(InputFileChangeEventArgs e)
+    {
+
+        var browserFile = e.File;
+
+        //Do your validations here
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        //Snackbar.Add($"Files with {browserFile.Size} bytes size are not allowed", MudBlazor.Severity.Error);
+        Snackbar.Add($"Files starting with letter {browserFile.Name.Substring(0, 1)} are not recommended", MudBlazor.Severity.Warning);
+        Snackbar.Add($"This file has the extension {browserFile.Name.Split(".").Last()}", MudBlazor.Severity.Info);
+
+        //Snackbar.Add($"Files with {entries.FirstOrDefault().Size} bytes size are not allowed", MudBlazor.Severity.Error);
+        //Snackbar.Add($"Files starting with letter {entries.FirstOrDefault().Name.Substring(0, 1)} are not recommended", MudBlazor.Severity.Warning);
+        //Snackbar.Add($"This file has the extension {entries.FirstOrDefault().Name.Split(".").Last()}", MudBlazor.Severity.Info);
+
+        //TODO upload the files to the server
+        await using FileStream fs = new FileStream("importPhotostock.json", FileMode.Create);
+        await browserFile.OpenReadStream().CopyToAsync(fs);
+
+        // To read the file, create a FileStream.
+        var myFileStream = new FileStream("importPhotostock.json", FileMode.Open);
+        // Call the Deserialize method and cast to the object type.
+        var importedObjectList = await JsonSerializer.DeserializeAsync<List<ConsolePhotostock>>(myFileStream);
+
+
+        bool? result = await mboxImport.Show();
+        state = result == null ? "Cancelled" : "Upload!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            string reqAdress = $"api/ConsolePhotostock/";
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to import Photostocks?"))
+            {
+                foreach (var entity in importedObjectList)
+                {
+                    entity.Id = 0;
+                    var playlist = await Http.PostAsJsonAsync<ConsolePhotostock>(reqAdress, entity);
+                    if (playlist.IsSuccessStatusCode == true)
+                        Snackbar.Add($"Imported {entity.Url} Successfull", MudBlazor.Severity.Success);
+                    else Snackbar.Add($"Import {entity.Url} failed \nStatus: {entity.Status}", MudBlazor.Severity.Error);
+                    StateHasChanged();
+                }
+                await OnInitializedAsync();
+            }
+        }
+    }
+
+    private async void UploadFileXpath(InputFileChangeEventArgs e)
+    {
+
+        var browserFile = e.File;
+
+        //Do your validations here
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+        //Snackbar.Add($"Files with {browserFile.Size} bytes size are not allowed", MudBlazor.Severity.Error);
+        Snackbar.Add($"Files starting with letter {browserFile.Name.Substring(0, 1)} are not recommended", MudBlazor.Severity.Warning);
+        Snackbar.Add($"This file has the extension {browserFile.Name.Split(".").Last()}", MudBlazor.Severity.Info);
+
+        //Snackbar.Add($"Files with {entries.FirstOrDefault().Size} bytes size are not allowed", MudBlazor.Severity.Error);
+        //Snackbar.Add($"Files starting with letter {entries.FirstOrDefault().Name.Substring(0, 1)} are not recommended", MudBlazor.Severity.Warning);
+        //Snackbar.Add($"This file has the extension {entries.FirstOrDefault().Name.Split(".").Last()}", MudBlazor.Severity.Info);
+
+        //TODO upload the files to the server
+        await using FileStream fs = new FileStream("importXpath.json", FileMode.Create);
+        await browserFile.OpenReadStream().CopyToAsync(fs);
+
+        // To read the file, create a FileStream.
+        var myFileStream = new FileStream("importXpath.json", FileMode.Open);
+        // Call the Deserialize method and cast to the object type.
+        var importedObjectList = await JsonSerializer.DeserializeAsync<List<ParserXpath>>(myFileStream);
+
+
+        bool? result = await mboxImportXpath.Show();
+        state = result == null ? "Cancelled" : "Upload!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            string reqAdress = $"api/ParserXpaths/";
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to import Xpaths?"))
+            {
+                foreach (var entity in importedObjectList)
+                {
+                    entity.Id = 0;
+                    var playlist = await Http.PostAsJsonAsync<ParserXpath>(reqAdress, entity);
+                    if (playlist.IsSuccessStatusCode == true)
+                        Snackbar.Add($"Imported {entity.Xpath} Successfull", MudBlazor.Severity.Success);
+                    else Snackbar.Add($"Import {entity.Xpath} failed \nStatus: {entity.Id}", MudBlazor.Severity.Error);
+                    StateHasChanged();
+                }
+                await OnInitializedAsync();
+            }
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await module.DisposeAsync();
+    }
 }

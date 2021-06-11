@@ -1,10 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using vkaudioposter_ef.parser;
 
-namespace WAAuth.Server.Context
+namespace HVMDash.Server.Context
 {
     public class PostedTracksContext : DbContext
     {
@@ -17,7 +14,8 @@ namespace WAAuth.Server.Context
         public virtual DbSet<PostedTrack> PostedTracks { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-
+            //optionsBuilder.LogTo(Console.WriteLine);
+            //optionsBuilder.EnableSensitiveDataLogging(true);
         }
 
     }

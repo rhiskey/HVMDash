@@ -1,37 +1,93 @@
-﻿using System;
+﻿using HVMDash.Server.Context;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using WAAuth.Server.Context;
 using vkaudioposter_ef.parser;
-using Microsoft.AspNetCore.Authorization;
 
-namespace WAAuth.Server.Controllers
+namespace HVMDash.Server.Controllers
 {
-    [Authorize]
-    [Route("[controller]")]
+    //[Authorize]
+    [Route("api/[controller]")]
     [ApiController]
     public class PostedTracksController : ControllerBase
     {
+        private readonly IMemoryCache memoryCache;
         private readonly PostedTracksContext _context;
-
-        public PostedTracksController(PostedTracksContext context)
+        private readonly string cacheKey = "LastPostedTracksList";
+        private readonly MemoryCacheEntryOptions cacheExpiryOptions = new()
         {
+            AbsoluteExpiration = DateTime.Now.AddHours(1),
+            Priority = CacheItemPriority.High,
+            SlidingExpiration = TimeSpan.FromMinutes(30)
+        };
+        public PostedTracksController(IMemoryCache memoryCache, PostedTracksContext context)
+        {
+            this.memoryCache = memoryCache;
             _context = context;
         }
 
+
         // GET: api/PostedTracks
         [HttpGet()]
-        public async Task<ActionResult<IEnumerable<PostedTrack>>> GetPostedTracks()
+        public async Task<ActionResult<IEnumerable<PostedTrack>>> GetPostedTracks(int? page, int? pageSize)
         {
-            //var postedTracksContext = _context.PostedTracks.Include(p => p.Playlist);
-            var last10Posted = _context.PostedTracks.OrderByDescending(t => t.Date);
-            return last10Posted.ToList();
-            //return Json(await last10Posted.ToListAsync()); //return View(...);
+            List<PostedTrack> lastPosted = new();
+            IEnumerable<PostedTrack> dataToPage;
+
+            if (!memoryCache.TryGetValue(cacheKey, out IEnumerable<PostedTrack> lastPosted2))
+            {
+                lastPosted = await _context.PostedTracks.OrderByDescending(t => t.Date).ToListAsync();
+
+                if (page != null && pageSize != null)
+                {
+                    int pg = page.Value; int sz = pageSize.Value;
+                    dataToPage = lastPosted.Skip(pg * sz).Take(sz);
+                }
+                else dataToPage = lastPosted;
+
+                memoryCache.Set(cacheKey, dataToPage, cacheExpiryOptions);
+                return dataToPage.ToList();
+            }
+
+            memoryCache.TryGetValue(cacheKey, out dataToPage);
+            return dataToPage.ToList();
         }
+
+
+        //// GET: api/PostedTracks
+        //[HttpGet()]
+        //public async Task<ActionResult<IEnumerable<PostedTrack>>> GetPostedTracks([FromQuery] RequestFeatures.RequestParameters reqParameters)
+        //{
+        //    List<PostedTrack> lastPosted = new List<PostedTrack>();
+        //    if (!memoryCache.TryGetValue(cacheKey, out IEnumerable<PostedTrack> lastPosted2))
+        //    {
+        //        lastPosted =  await _context.PostedTracks.OrderByDescending(t => t.Date).ToListAsync();
+
+        //        memoryCache.Set(cacheKey, lastPosted, cacheExpiryOptions);
+        //        return lastPosted.ToList();
+        //    }
+
+        //    memoryCache.TryGetValue(cacheKey, out lastPosted);
+        //    return lastPosted;
+        //}
+
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<PostedTrack>> GetPostedTracks(int postId)
+        //{
+        //    var postedTracks = await _context.PostedTracks.Where(a=> a.Post.Id == postId);
+
+        //    if (postedTracks == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    return;
+        //}
 
         // GET: api/PostedTracks/stylecount
         //[HttpGet("/stylecount")]

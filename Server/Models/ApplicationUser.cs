@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace WAAuth.Server.Models
+namespace HVMDash.Server.Models
 {
     public class ApplicationUser : IdentityUser
     {

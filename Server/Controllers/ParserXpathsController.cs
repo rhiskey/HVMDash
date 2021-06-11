@@ -1,18 +1,18 @@
-﻿using System;
+﻿using HVMDash.Server.Context;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using WAAuth.Server.Context;
 using vkaudioposter_ef.Model;
-using Microsoft.AspNetCore.Authorization;
 
-namespace WAAuth.Server.Controllers
+
+namespace HVMDash.Server.Controllers
 {
     [Authorize]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ParserXpathsController : ControllerBase
     {
@@ -24,6 +24,7 @@ namespace WAAuth.Server.Controllers
         }
 
         // GET: ParserXpaths
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<ParserXpath>>> GetXpaths()
         {
             return await _context.ParserXpaths.ToListAsync();
@@ -31,7 +32,7 @@ namespace WAAuth.Server.Controllers
 
         // GET: ParserXpaths/Xpath/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ParserXpath>>GetXpath(int? id)
+        public async Task<ActionResult<ParserXpath>> GetXpath(int? id)
         {
             if (id == null)
             {
@@ -48,6 +49,18 @@ namespace WAAuth.Server.Controllers
             return parserXpath;
         }
 
+        // GET: api/ConsolePhotostocks/export
+        [HttpGet("export")]
+        public async Task<JsonResult> ExportPhotostocks()
+        {
+            List<ParserXpath> data = new();
+
+            data = await _context.ParserXpaths.OrderBy(p => p.Id).ToListAsync();
+            var jsonString = JsonSerializer.Serialize(data);
+
+            return new JsonResult(jsonString);
+        }
+
         //// GET: ParserXpaths/Create
         //public IActionResult Create()
         //{
@@ -59,14 +72,14 @@ namespace WAAuth.Server.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         //[ValidateAntiForgeryToken]
-        public async Task<ActionResult<ParserXpath>> PostXpath( ParserXpath parserXpath)
+        public async Task<ActionResult<ParserXpath>> PostXpath(ParserXpath parserXpath)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(parserXpath);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
+            //if (ModelState.IsValid)
+            //{
+            _context.Add(parserXpath);
+            await _context.SaveChangesAsync();
+            //return RedirectToAction(nameof(Index));
+            //}
             return CreatedAtAction("GetXpath", new { id = parserXpath.Id }, parserXpath);
         }
 
@@ -152,16 +165,16 @@ namespace WAAuth.Server.Controllers
             return xpath;
         }
 
-        // POST: ParserXpaths/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var parserXpath = await _context.ParserXpaths.FindAsync(id);
-            _context.ParserXpaths.Remove(parserXpath);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+        //// POST: ParserXpaths/Delete/5
+        //[HttpPost, ActionName("Delete")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> DeleteConfirmed(int id)
+        //{
+        //    var parserXpath = await _context.ParserXpaths.FindAsync(id);
+        //    _context.ParserXpaths.Remove(parserXpath);
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         private bool ParserXpathExists(int id)
         {

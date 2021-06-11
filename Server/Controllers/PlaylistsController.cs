@@ -1,28 +1,40 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using HVMDash.Server.Context;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WAAuth.Server.Context;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using vkaudioposter_ef.parser;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
-
-namespace WAAuth.Server.Controllers
+namespace HVMDash.Server.Controllers
 {
     [Authorize]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class PlaylistsController : ControllerBase
     {
+        private readonly IMemoryCache memoryCache;
         private readonly PlaylistContext _context;
+        private readonly string cacheKey = "AllPlaylists";
+        private readonly ILogger<PlaylistsController> _logger;
 
-        public PlaylistsController(PlaylistContext context)
+        private readonly MemoryCacheEntryOptions cacheExpiryOptions = new()
         {
+            AbsoluteExpiration = DateTime.Now.AddDays(7),
+            Priority = CacheItemPriority.High,
+            SlidingExpiration = TimeSpan.FromDays(3)
+        };
+
+        public PlaylistsController(IMemoryCache memoryCache, PlaylistContext context, ILogger<PlaylistsController> logger)
+        {
+            this.memoryCache = memoryCache;
             _context = context;
+            _logger = logger;
         }
 
         //private readonly ILogger<PlaylistsController> _logger;
@@ -36,7 +48,33 @@ namespace WAAuth.Server.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Playlist>>> GetPlaylists()
         {
-            return await _context.Playlists.OrderBy(p => p.Status).ThenBy(p=>p.PlaylistName).ToListAsync();
+
+            List<Playlist> playlists = new();
+            if (!memoryCache.TryGetValue(cacheKey, out IEnumerable<Playlist> playlists2))
+            {
+                playlists = await _context.Playlists.OrderBy(p => p.Status).ThenBy(p => p.PlaylistName).ToListAsync();
+
+                memoryCache.Set(cacheKey, playlists, cacheExpiryOptions);
+                return playlists;
+            }
+            memoryCache.TryGetValue(cacheKey, out playlists);
+            return playlists;
+        }
+
+        // GET: api/Playlists/export
+        [HttpGet("export")]
+        public async Task<JsonResult> ExportPlaylists()
+        {
+
+            List<Playlist> playlists = new();
+
+            playlists = await _context.Playlists.OrderBy(p => p.Status).ThenBy(p => p.PlaylistName).ToListAsync();
+
+            var jsonString = JsonSerializer.Serialize(playlists);
+            //return CreatedAtAction("ExportPlaylists", jsonString); ;
+            return new JsonResult(jsonString);
+            //return File(jsonString, "application/force-download");
+
         }
 
         //[HttpGet]
@@ -102,6 +140,7 @@ namespace WAAuth.Server.Controllers
                     throw;
                 }
             }
+            memoryCache.Remove(cacheKey);
 
             var res = await _context.Playlists.FindAsync(id);
             return res;
@@ -115,16 +154,25 @@ namespace WAAuth.Server.Controllers
         [HttpPost]
         public async Task<ActionResult<Playlist>> PostPlaylist(Playlist playlist)
         {
-            _context.Playlists.Add(playlist);
-            await _context.SaveChangesAsync();
+            memoryCache.Remove(cacheKey);
 
-            return CreatedAtAction("GetPlaylist", new { id = playlist.Id }, playlist);
+            var created = _context.Playlists.Add(playlist).Entity;
+            var res = await _context.SaveChangesAsync();
+
+            _logger.LogInformation($"Posted Playlist {created.Id}");
+            //if (n > 0)
+            //{
+            //    memoryCache.Set(cacheKey, playlists, cacheExpiryOptions);
+            //}
+            return CreatedAtAction("PostPlaylist", new { id = created.Id }, created);
         }
 
         // DELETE: api/Playlists/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Playlist>> DeletePlaylist(int id)
         {
+            memoryCache.Remove(cacheKey);
+
             var playlist = await _context.Playlists.FindAsync(id);
             if (playlist == null)
             {

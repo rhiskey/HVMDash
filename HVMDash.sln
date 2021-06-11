@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Server", "Server\HVMDash.Server.csproj", "{8046374F-B962-4E22-8C1C-06F9C34648AB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{595F24CE-EFF9-42C8-8A82-F07C82B6FD56} = {595F24CE-EFF9-42C8-8A82-F07C82B6FD56}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Client", "Client\HVMDash.Client.csproj", "{A9FEE7B6-B672-4783-997C-821DE99B57AE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Shared", "Shared\HVMDash.Shared.csproj", "{B6789203-47E7-4013-ADD3-C4F689DE5FCD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vkaudioposter_Console", "vkaudioposter_Console\vkaudioposter_Console.csproj", "{A9365855-B3E7-468A-AD3D-56CFCB462F56}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vkaudioposter-ef", "vkaudioposter-ef\vkaudioposter-ef\vkaudioposter-ef.csproj", "{595F24CE-EFF9-42C8-8A82-F07C82B6FD56}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8046374F-B962-4E22-8C1C-06F9C34648AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8046374F-B962-4E22-8C1C-06F9C34648AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8046374F-B962-4E22-8C1C-06F9C34648AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8046374F-B962-4E22-8C1C-06F9C34648AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9FEE7B6-B672-4783-997C-821DE99B57AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9FEE7B6-B672-4783-997C-821DE99B57AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9FEE7B6-B672-4783-997C-821DE99B57AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9FEE7B6-B672-4783-997C-821DE99B57AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6789203-47E7-4013-ADD3-C4F689DE5FCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6789203-47E7-4013-ADD3-C4F689DE5FCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6789203-47E7-4013-ADD3-C4F689DE5FCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6789203-47E7-4013-ADD3-C4F689DE5FCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9365855-B3E7-468A-AD3D-56CFCB462F56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9365855-B3E7-468A-AD3D-56CFCB462F56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9365855-B3E7-468A-AD3D-56CFCB462F56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9365855-B3E7-468A-AD3D-56CFCB462F56}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595F24CE-EFF9-42C8-8A82-F07C82B6FD56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595F24CE-EFF9-42C8-8A82-F07C82B6FD56}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595F24CE-EFF9-42C8-8A82-F07C82B6FD56}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595F24CE-EFF9-42C8-8A82-F07C82B6FD56}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {378CDA4A-9487-4D5B-A16E-95476A665450}
+	EndGlobalSection
+EndGlobal

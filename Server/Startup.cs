@@ -1,3 +1,8 @@
+using HVMDash.Server.Context;
+using HVMDash.Server.Data;
+using HVMDash.Server.Hubs;
+using HVMDash.Server.Models;
+using HVMDash.Server.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8,11 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
-using WAAuth.Server.Context;
-using WAAuth.Server.Data;
-using WAAuth.Server.Models;
 
-namespace WAAuth.Server
+namespace HVMDash.Server
 {
     public class Startup
     {
@@ -27,14 +29,22 @@ namespace WAAuth.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSignalR();
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                            options.UseSqlServer(
-                Configuration.GetConnectionString("MSSQL_UserConnection")));
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("MSSQL_UserConnection")));
 
             services.AddDbContext<PlaylistContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<PostedTracksContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+
+            services.AddMemoryCache();
+            services.AddControllers().AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            ); //N+1
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -49,6 +59,13 @@ namespace WAAuth.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
+            services.AddHostedService<TimedHostedService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -81,6 +98,7 @@ namespace WAAuth.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
+                endpoints.MapHub<CommandsHub>("/commandshub");
                 endpoints.MapFallbackToFile("index.html");
             });
         }

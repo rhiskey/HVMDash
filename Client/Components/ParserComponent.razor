@@ -1,0 +1,27 @@
+﻿@namespace HVMDash.Client.Components
+@inject IJSRuntime js
+@inject HttpClient Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@attribute [Authorize]
+
+    <AuthorizeView>
+        <Authorized>
+            <MudButton OnClick="@(()=>StartParser())" StartIcon="@Icons.Material.Filled.RunCircle">Start posts generator</MudButton>
+        </Authorized>
+    </AuthorizeView>
+
+    @code {
+        private async Task StartParser()
+        {
+            try
+            {
+                await Http.PostAsJsonAsync("api/Parser/Action", "start");
+            }
+            catch (AccessTokenNotAvailableException exception)
+            {
+                exception.Redirect();
+            }
+        }
+    }
