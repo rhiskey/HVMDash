@@ -1,0 +1,293 @@
+﻿@page "/Posts"
+@namespace HVMDash.Client.Components
+
+@using HVMDash.Shared
+@using vkaudioposter_ef.parser;
+@using System.Net.Http.Json
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Threading;
+@*@using Microsoft.Extensions.Logging
+    @inject ILogger<PostsComponent> Logger*@
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@*<h3>Posts</h3>*@
+
+<h5>Latest Posts</h5>
+
+<MudTr>
+    @if (ppCount != 0)
+    {
+        <MudTd><MudText>Postponed posts:</MudText></MudTd>
+        <MudTd><MudChipSet><MudChip Color="Color.Primary">@ppCount</MudChip></MudChipSet></MudTd>
+
+        @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+                @{ showAudio = true;}
+            </MudHidden>*@
+    }
+    else
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="100px" />
+    }
+    <MudTd><MudSwitch @bind-Checked="@showAudio" Color="Color.Primary">MP3 Switch</MudSwitch></MudTd>
+</MudTr>
+<MudDivider />
+<br />
+
+@if (Posts.Count == 0)
+{
+    @*<MudGrid>
+        @for (int i = 0; i <= 5; i++)
+        {
+        <MudItem>*@
+
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderAvatar>
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Height="40px" Width="40px" />
+            </CardHeaderAvatar>
+            <CardHeaderContent>
+                <MudSkeleton Animation="Animation.Wave" Width="40%" />
+                <MudSkeleton Animation="Animation.Wave" Width="60%" />
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.Wave" Height="250px" />
+        <MudCardContent>
+            <MudSkeleton Animation="Animation.Wave" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Height="30px" Width="30px" Class="ml-2 mb-2" />
+            <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Wave" Height="30px" Width="30px" Class="ml-3 mb-2" />
+        </MudCardActions>
+    </MudCard>
+
+    @*</MudItem>
+            }
+        </MudGrid>*@
+}
+else
+{
+    <MudGrid>
+        @foreach (var post in Posts)
+        {
+            var msg = post.Message;
+            var date = post.PublishDate;
+
+            <MudItem>
+                <MudPaper Class="d-flex align-center justify-center mud-width-full">
+                    <MudCard>
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Secondary" Image="icon-512.png" Size="Size.Medium">HVM</MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudTooltip Text="All posts in this playlist"><MudLink Href="@Formatters.GetHasTagLink(msg)" Target="_blank" Typo="Typo.body1" Color="Color.Secondary">@msg</MudLink></MudTooltip>
+                                <MudText Typo="Typo.body2">@date.ToString("dd.MM.yyy HH:mm")</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                @*<MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />*@
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        @foreach (var photo in post.PostedPhotos)
+                        {
+                            var url = photo.Url;
+                            <a href="@url" target="_blank"><MudCardMedia Image="@url" /></a>
+                        }
+                        <MudCardContent>
+                            <MudChipSet @bind-SelectedChip="selected" Filter="true" Mandatory="@mandatory">
+                                @for (int i = 0; i < post.PostedTracks.Count; i++)
+                                {
+                                    var counter = i + 1;
+                                    PostedTrack attachment = (PostedTrack)post.PostedTracks.ElementAt(i);
+                                    var url = attachment.Url;
+                                    var previewMp3 = attachment.PreviewUrl;
+                                    @*<MudTooltip Text="Track in Spotify">*@
+                                    <MudLink Href="@url" Target="_blank">
+                                        @if (previewMp3 != null && showAudio == true)
+                                        {
+                                            <MudChip Color="Color.Primary">
+                                                <audio controls preload="auto">
+                                                    <source src="@previewMp3" />
+                                                </audio>
+                                            </MudChip>
+                                            <MudChip Text="Trackname" Color="Color.Info">@counter.ToString()) @attachment.Trackname</MudChip>
+                                            @*<MudDivider DividerType="DividerType.Middle" Class="my-6" />*@
+                                            <br />
+                                        }
+                                        else
+                                        {
+                                            <MudChip Color="Color.Primary">@counter.ToString()) @attachment.Trackname</MudChip>
+                                            @*<MudDivider DividerType="DividerType.Middle" Class="my-6" />*@
+                                            <br />
+                                        }
+                                    </MudLink>
+                                    @*</MudTooltip>*@
+                                }
+                            </MudChipSet>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudTooltip Text="VK Community post link"><MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Default" Link="@Formatters.GetPostLink(post.OwnerId, post.PostId)" Target="_blank" /></MudTooltip>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(e=>DeletePost(post.Id))" />
+                        </MudCardActions>
+                    </MudCard>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+    <MudTr>
+        <MudTd><MudNumericField ReadOnly="true" @bind-Value="@pageValue" Variant="Variant.Outlined" Step="10" Min="10"></MudNumericField>	</MudTd>
+        <MudTd><MudButton OnClick="@(e=>FetchPosts(pageValue))" Variant="Variant.Filled" Color="Color.Primary">Load More</MudButton></MudTd>
+    </MudTr>
+}
+
+@*Card Header ->         @*<MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Default" />*@
+@*<MudItem xs="12">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=12</MudPaper>
+    </MudItem>*@
+<!--<MudItem xs="12">-->
+<!-- VK Widget -->
+<!--</MudItem>-->
+@*<MudItem xs="6">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=6</MudPaper>
+    </MudItem>
+    <MudItem xs="3">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=3</MudPaper>
+    </MudItem>
+    <MudItem xs="3">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=3</MudPaper>
+    </MudItem>
+    <MudItem xs="3">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=3</MudPaper>
+    </MudItem>
+    <MudItem xs="3">
+    <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">xs=3</MudPaper>
+    </MudItem>*@
+
+@*<MudSwitch @bind-Checked="@arrows" Color="Color.Primary">Show Arrows</MudSwitch>
+    <MudSwitch @bind-Checked="@delimiters" Color="Color.Primary">Show Delimiters</MudSwitch>
+    <MudSwitch @bind-Checked="@autocycle" Color="Color.Primary">Auto Cycle (Default: 5 secs)</MudSwitch>*@
+
+<MudMessageBox @ref="mbox" Title="Warning" CancelText="Cancel">
+    <MessageContent>
+        Deleting can <b><i>not</i></b> be undone!
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+    </YesButton>
+</MudMessageBox>
+
+
+<br />
+<br />
+
+@code {
+    private List<Post> Posts = new List<Post>();
+
+    bool mandatory = true;
+    MudChip selected;
+
+    private int pageValue = 10;
+    private int ppCount { get; set; }
+
+    private bool showAudio = false;
+
+    MudMessageBox mbox { get; set; }
+    string state = "Message box hasn't been opened yet";
+
+    protected override async Task OnInitializedAsync()
+    {
+        //string req = String.Format("api/Posts?page={0}&pageSize={1}", 1, 5);
+        //Posts = await Http.GetFromJsonAsync<List<Post>>(req);
+        Posts = await localStorage.GetItemAsync<List<Post>>("lastfiveposts");
+        if (Posts.Count() == 0 || Posts == null)
+        {
+            string req = String.Format("api/Posts?page={0}&pageSize={1}", 1, 5);
+            Posts = await Http.GetFromJsonAsync<List<Post>>(req);
+        }
+        //Posts.Take(5).ToList(); //TODO
+        //StateHasChanged();
+    }
+
+    //protected override async void OnAfterRender(bool firstRender)
+    //{
+    //    //Logger.LogInformation("OnAfterRender(1): firstRender: " +
+    //    //    "{FirstRender}, message: {Message}", firstRender, ppCount);
+
+    //    if (firstRender)
+    //    {
+    //        ppCount = 0;
+    //        //await FetchPPCount();
+    //    }
+    //    else
+    //    {
+    //        ppCount = -1;
+    //        await FetchPPCount();
+    //    }
+
+    //    //Logger.LogInformation("OnAfterRender(2): firstRender: " +
+    //    //    "{FirstRender}, message: {Message}", firstRender, ppCount);
+    //}
+
+    private async Task FetchPosts(int? amount)
+    {
+        string req = String.Format("api/Posts?page={0}&pageSize={1}", 1, amount);
+        IEnumerable<Post> fetchedPosts = await Http.GetFromJsonAsync<List<Post>>(req);
+        fetchedPosts = fetchedPosts.OrderByDescending(d => d.Id);
+
+        Posts.AddRange(fetchedPosts);
+        pageValue += 10;
+
+    }
+
+    private async Task FetchPPCount()
+    {
+        var ppPosts = await Http.GetFromJsonAsync<List<Post>>("api/Posts");
+        //Posts.OrderByDescending(d => d.Id);
+        ppCount = ppPosts.Count;
+        await localStorage.SetItemAsync("ppCount", ppPosts.Count);
+        StateHasChanged();
+    }
+
+    private async Task DeletePost(int postIdToDelete)
+    {
+        //Delete from DB
+        Snackbar.Add("Commit Delete Handler Invoked");
+
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            string reqAdress = $"api/Posts/{postIdToDelete}";
+            var post = await Http.GetFromJsonAsync<Post>(reqAdress);
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {post.Id} ({post.Message}) Record?"))
+            {
+                await Http.DeleteAsync($"api/Posts/{postIdToDelete}");
+                Snackbar.Add("Deleted Successfull", Severity.Success);
+                await OnInitializedAsync();
+
+            }
+        }
+        // Delete from VK
+    }
+
+
+    //private async Task ShowTodayPosts()
+    //{
+
+    //}
+
+}

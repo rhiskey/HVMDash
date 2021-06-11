@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  hvmdash.server:
+    image: ${DOCKER_REGISTRY-}hvmdashserver
+    build:
+      context: .
+      dockerfile: Server/Dockerfile

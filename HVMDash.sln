@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Server", "Server\HVMDash.Server.csproj", "{13CC0FC8-8028-40C3-8F24-429310467A0D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5} = {232EB9A8-321D-4C71-9A93-E6566C7EAED5}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Client", "Client\HVMDash.Client.csproj", "{5587F566-80FD-4656-9EE6-D14BD3A97A66}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HVMDash.Shared", "Shared\HVMDash.Shared.csproj", "{3771B4AB-E32B-41E1-8F9D-F41093C0AEAC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5} = {232EB9A8-321D-4C71-9A93-E6566C7EAED5}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vkaudioposter-ef", "vkaudioposter-ef\vkaudioposter-ef\vkaudioposter-ef.csproj", "{232EB9A8-321D-4C71-9A93-E6566C7EAED5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vkaudioposter_Console", "vkaudioposter_Console\vkaudioposter_Console.csproj", "{9A81703F-8BFA-4CE9-AB8E-263D512DAE82}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{13CC0FC8-8028-40C3-8F24-429310467A0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13CC0FC8-8028-40C3-8F24-429310467A0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13CC0FC8-8028-40C3-8F24-429310467A0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13CC0FC8-8028-40C3-8F24-429310467A0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5587F566-80FD-4656-9EE6-D14BD3A97A66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5587F566-80FD-4656-9EE6-D14BD3A97A66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5587F566-80FD-4656-9EE6-D14BD3A97A66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5587F566-80FD-4656-9EE6-D14BD3A97A66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3771B4AB-E32B-41E1-8F9D-F41093C0AEAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3771B4AB-E32B-41E1-8F9D-F41093C0AEAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3771B4AB-E32B-41E1-8F9D-F41093C0AEAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3771B4AB-E32B-41E1-8F9D-F41093C0AEAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{232EB9A8-321D-4C71-9A93-E6566C7EAED5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A81703F-8BFA-4CE9-AB8E-263D512DAE82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A81703F-8BFA-4CE9-AB8E-263D512DAE82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A81703F-8BFA-4CE9-AB8E-263D512DAE82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A81703F-8BFA-4CE9-AB8E-263D512DAE82}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A51D0837-26A4-47FC-8EDF-BFD5B8776CEC}
+	EndGlobalSection
+EndGlobal

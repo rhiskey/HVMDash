@@ -1,0 +1,99 @@
+﻿@*@page "/lastpostedtracks/{PostedTracks?}&{PLaylists?}"*@
+@namespace HVMDash.Client.Components
+@using vkaudioposter_ef.parser;
+@using System.Collections.Generic;
+
+
+<h5>Last posted tracks</h5>
+@*<p>@message</p>*@
+<MudSimpleTable Style="overflow-x: auto;">
+    <thead>
+        <tr>
+            @foreach (var h in headings)
+            {
+                <th>@h</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in PostedTracks)
+        {
+            <tr>
+                <td>@row.Id</td>
+                <td>@row.MediaId</td>
+                <td>@row.OwnerId</td>
+                <td>@GetPlaylistNameFromId(row.PlaylistId)</td>
+                <td>@row.Trackname</td>
+                <td>@row.Date.ToString("dd.MM.yyy HH:mm")</td>
+                @*<td><audio controls><source src="@row.PreviewUrl" /></audio></td>*@
+            </tr>
+        }
+    </tbody>
+</MudSimpleTable>
+<br />
+<br />
+
+@code {
+    string[] headings = { "ID", "MediaID", "OwnerID", "Playlist", "Trackname", "Date"};
+
+    [Parameter]
+    public IEnumerable<PostedTrack> PostedTracks { get; set; }
+
+    [Parameter]
+    public IEnumerable<Playlist> Playlists { get; set; }
+
+    //private string message = "Not set";
+
+
+    private string GetPlaylistNameFromId(int? id)
+    {
+        return Playlists.Where(y => y.Id == (int)id).Select(x => x.PlaylistName).FirstOrDefault();
+    }
+
+
+    //public override async Task SetParametersAsync(ParameterView parameters)
+    //{
+    //    if (parameters.TryGetValue<string>(nameof(PostedTracks), out var value))
+    //    {
+    //        if (value is null)
+    //        {
+    //            message = "The value of 'PostedTracks' is null.";
+    //        }
+    //        else
+    //        {
+    //            message = $"The value of 'PostedTracks' is {value}.";
+    //        }
+    //    }
+
+    //    if (parameters.TryGetValue<string>(nameof(Playlists), out var value2))
+    //    {
+    //        if (value2 is null)
+    //        {
+    //            message = "The value of 'Playlists' is null.";
+    //        }
+    //        else
+    //        {
+    //            message = $"The value of 'Playlists' is {value2}.";
+    //        }
+    //    }
+
+
+    //    await base.SetParametersAsync(parameters);
+    //}
+
+
+    //protected override void OnParametersSetAsync()
+    //{
+    //    if (StartDate == default)
+    //    {
+    //        StartDate = DateTime.Now;
+
+    //        message = $"No start date in URL. Default value applied (StartDate: {StartDate}).";
+    //    }
+    //    else
+    //    {
+    //        message = $"The start date in the URL was used (StartDate: {StartDate}).";
+    //    }
+    //}
+
+}

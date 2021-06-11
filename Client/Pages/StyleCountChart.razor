@@ -1,0 +1,132 @@
+﻿@page "/Charts"
+@namespace HVMDash.Client.Pages
+@using HVMDash.Shared
+@using vkaudioposter_ef.parser;
+@using System.Net.Http.Json
+@using System.Collections.Generic;
+@using System.Linq;
+@using System.Threading;
+
+@using HVMDash.Client.Components
+
+@inject HttpClient Http
+@*@inject StateContainer StateContainer*@
+
+
+<h3>StyleCountChart</h3>
+
+@if (Series.Count == 0 || XAxisLabels.Length == 0)
+{
+    @*<p><em>Loading...</em></p>*@
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">
+        <MudPaper Class="pa-4">
+            <MudText>Top 20</MudText>
+            <MudChart ChartType="ChartType.Bar" ChartSeries="@Series" XAxisLabels="@XAxisLabels" Width="100%" Height="350px" LegendPosition="Position.Bottom"></MudChart>
+            <MudText>Last 20</MudText>
+            <MudChart ChartType="ChartType.Bar" ChartSeries="@Series2" XAxisLabels="@XAxisLabels2" Width="100%" Height="350px" LegendPosition="Position.Bottom"></MudChart>
+        </MudPaper>
+    </MudHidden>
+}
+<br />
+
+@if (PostedTracks == null || Playlists == null)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <LastPostedTracks PostedTracks="PostedTracks" Playlists="Playlists" />
+}
+<br />
+<br />
+
+@code {
+
+    public double[] data = { };
+    public List<ChartSeries> Series = new List<ChartSeries>(), Series2 = new List<ChartSeries>();
+    public string[] XAxisLabels = { }, XAxisLabels2 = { };
+
+    private IEnumerable<Playlist> Playlists = new List<Playlist>();
+    private IEnumerable<PostedTrack> PostedTracks = new List<PostedTrack>();
+
+    List<string> xLabelsList = new List<string>(), xLabelsListLast = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DrawChartAsync();
+        await CreateTableAsync();
+    }
+
+    protected async Task DrawChartAsync()
+    {
+        Playlists = await Http.GetFromJsonAsync<List<Playlist>>("api/Playlists");
+
+        var countPerPlaylists =
+            from playlist in Playlists
+            orderby playlist.Count descending
+            select new
+            {
+                ID = playlist.Id,
+                Count = playlist.Count
+            };
+
+        countPerPlaylists = countPerPlaylists.Take(20);
+
+        var countPerPlaylistsLast =
+            from playlist in Playlists
+            orderby playlist.Count ascending
+            select new
+            {
+                ID = playlist.Id,
+                Count = playlist.Count
+            };
+
+        countPerPlaylistsLast = countPerPlaylistsLast.Take(20);
+
+        foreach (var s in countPerPlaylists)
+            AddToSeries(s);
+        foreach (var s in countPerPlaylistsLast)
+            AddToSeriesLast(s);
+
+        XAxisLabels = xLabelsList.Distinct().ToArray();
+        //StateContainer.OnChange += StateHasChanged;
+    }
+
+    protected async Task CreateTableAsync()
+    {
+        @*PostedTracks = await Http.GetFromJsonAsync<List<PostedTrack>>(String.Format("PostedTracks/page={0}&pageSize={1}",1,20));*@
+        string req = String.Format("api/PostedTracks?page={0}&pageSize={1}", 1, 20);
+        PostedTracks = await Http.GetFromJsonAsync<List<PostedTrack>>(req);
+        PostedTracks = PostedTracks.OrderByDescending(d => d.Date);
+        //StateContainer.OnChange += StateHasChanged;
+    }
+
+    static void test(dynamic t)
+    {
+        foreach (var a in t)
+        {
+            Console.WriteLine($"ID: { a.ID}, Count: {a.Count}");
+        }
+    }
+
+    protected void AddToSeries(dynamic t)
+    {
+        double[] dt = { Convert.ToDouble(t.Count) };
+        string pName = Playlists.Where(y => y.Id == (int)t.ID).Select(x => x.PlaylistName).FirstOrDefault();
+        xLabelsList.Add(pName);
+        Series.Add(new ChartSeries() { Name = pName, Data = dt });
+    }
+
+    protected void AddToSeriesLast(dynamic t)
+    {
+        double[] dt = { Convert.ToDouble(t.Count) };
+        string pName = Playlists.Where(y => y.Id == (int)t.ID).Select(x => x.PlaylistName).FirstOrDefault();
+        xLabelsListLast.Add(pName);
+        Series2.Add(new ChartSeries() { Name = pName, Data = dt });
+    }
+
+}

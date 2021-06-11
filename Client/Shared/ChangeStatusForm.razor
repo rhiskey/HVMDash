@@ -1,0 +1,53 @@
+﻿
+<MudPaper>
+    <EditForm Model="_form" OnValidSubmit="SubmitForm">
+        <DataAnnotationsValidator />
+
+        <MudContainer class="form-group">
+            <MudSwitch @bind-Checked="@_form.changeStatus" Color="Color.Tertiary">Enabled status int: @_form.changeStatus</MudSwitch>
+
+            @*<label for="message">Message</label>
+                <InputText @bind-Value="_form.Message" class="form-control" placeholder="Enter a message" />
+                <ValidationMessage For="@(() => _form.Message)" />*@
+        </MudContainer>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button @onclick="Cancel" class="btn btn-secondary">Cancel</button>
+    </EditForm>
+    <MudThemeProvider Theme="currentTheme" />
+</MudPaper>
+
+
+<!--<MudMessageBox @ref="ChangeStatusForm.Form.mbox" Title="Warning" CancelText="Cancel">
+    <MessageContent>-->
+        @*Deleting can <b><i>not</i></b> be undone!*@
+        <!--<label for="status">Change status</label>
+        <MudSwitch @bind-Checked="@_form.changeStatus" Color="Color.Tertiary">int: @_form.changeStatus</MudSwitch>
+
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Change!</MudButton>
+    </YesButton>
+</MudMessageBox>-->
+@*<MudThemeProvider Theme="currentTheme" />*@
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+    [CascadingParameter] MudTheme currentTheme { get; set; }
+
+    Form _form = new Form();
+
+    ////protected override void OnInitialized() => BlazoredModal.SetTitle("Change Status");
+
+    async Task SubmitForm() => await BlazoredModal.CloseAsync(ModalResult.Ok(_form.changeStatus));
+    async Task Cancel() => await BlazoredModal.CancelAsync();
+
+    public class Form
+    {
+        public static MudMessageBox mbox { get; set; }
+        //[Required(ErrorMessage = "Please enter a message")]
+        //public string Message { get; set; }
+        public int changeStatus { get; set; }
+    }
+}

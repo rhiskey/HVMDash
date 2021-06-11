@@ -1,0 +1,206 @@
+﻿@page "/parserxpath"
+@namespace HVMDash.Client.Pages
+@using HVMDash.Shared
+@using vkaudioposter_ef.Model
+@using vkaudioposter_ef.parser
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+
+@inject HttpClient Http
+
+<h1>Edit ParserXpath</h1>
+
+
+@if (parserXpaths == null)
+{
+    <p><em>Loading...</em></p>
+    <MudSkeleton />
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+}
+else
+{
+    <MudExpansionPanels>
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                    <MudText>Create</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                    <MudTr>
+                        <MudTd>
+                            <MudTooltip Text="Xpath">
+                                <MudTextField @bind-Value="@xpathToCreate.Xpath" Label="Xpath" Variant="Variant.Outlined"
+                                              Required="true"
+                                              RequiredError="Xpath is required!"></MudTextField>
+                            </MudTooltip>
+                        </MudTd>
+                        <MudTd><MudTooltip Text="XpathInner"><MudTextField @bind-Value="@xpathToCreate.XpathInner" Label="XpathInner" Variant="Variant.Outlined"></MudTextField></MudTooltip></MudTd>
+                    </MudTr>
+                <br />
+                <MudTr>
+                    <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" OnClick="@OnCreateClick" Variant="Variant.Filled">Create</MudButton>
+                </MudTr>
+                <br />
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <br />
+
+    <MudTable Items="@parserXpaths" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<ParserXpath,bool>(FilterFunc)" @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">ParserXpath</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <ColGroup>
+            <col />
+            <col />
+        </ColGroup>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<ParserXpath, object>(x=>x.Xpath)">Xpath</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<ParserXpath, object>(x=>x.XpathInner)">XpathInner</MudTableSortLabel></MudTh>
+
+            <MudTh colspan="2">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="URL"><MudHighlighter Text="@context.Xpath" HighlightedText="@searchString" /></MudTd>
+            <MudTd DataLabel="XpathInner">@context.XpathInner</MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd DataLabel="Xpath">
+                <MudTextField @bind-Value="@context.Xpath" Required />
+            </MudTd>
+            <MudTd DataLabel="XpathInner">
+                <MudTextField @bind-Value="@context.XpathInner" Required />
+            </MudTd>
+        </RowEditingTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+    <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+    <MudSwitch @bind-Checked="@ronly" Color="Color.Tertiary">Read Only</MudSwitch>
+    <MudText Inline="true">Selected: @selectedItem?.Id</MudText>
+
+    <MudMessageBox @ref="mbox" Title="Warning" CancelText="Cancel">
+        <MessageContent>
+            Deleting can <b><i>not</i></b> be undone!
+        </MessageContent>
+        <YesButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeleteForever">Delete!</MudButton>
+        </YesButton>
+    </MudMessageBox>
+}
+<br />
+<br />
+
+@code {
+    private IEnumerable<ParserXpath> parserXpaths = new List<ParserXpath>();
+    //private ParserXpath[] parserXpaths;
+    private ParserXpath xpathToCreate = new ParserXpath();
+
+    MudMessageBox mbox { get; set; }
+    string state = "Message box hasn't been opened yet";
+
+    private bool dense = false;
+    private bool hover = true;
+    [Parameter]
+    public bool ronly { get; set; }
+    private string searchString = "";
+
+    private ParserXpath selectedItem = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        parserXpaths = await Http.GetFromJsonAsync<ParserXpath[]>("api/ParserXpaths");
+        //parserXpaths = await Http.GetFromJsonAsync<ParserXpath[]>("api/ParserXpaths");
+    }
+
+    private bool FilterFunc(ParserXpath element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Xpath.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task OnCommitEditClick()
+    {
+        Snackbar.Add("Commit Edit Handler Invoked");
+
+
+        string reqAdress = $"api/ParserXpaths/{selectedItem.Id}";
+        var response = await Http.PutAsJsonAsync(reqAdress, selectedItem);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Edited Successfull", Severity.Success);
+            await OnInitializedAsync();
+        }
+        else Snackbar.Add($"Error: {response.StatusCode}", Severity.Error);
+    }
+
+    private async Task DeleteClick(int Id)
+    {
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            Snackbar.Add("Commit Delete Handler Invoked");
+
+            string reqAdress = $"api/ParserXpaths/{Id}";
+            var pxp = await Http.GetFromJsonAsync<ParserXpath>(reqAdress);
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {pxp.Id} Record?"))
+            {
+                await Http.DeleteAsync($"api/ParserXpaths/{Id}");
+                Snackbar.Add("Deleted Successfull", Severity.Success);
+                await OnInitializedAsync();
+            }
+        }
+    }
+
+    private async Task OnCreateClick()
+    {
+        Snackbar.Add("Create Handler Invoked");
+
+
+        var response = await Http.PostAsJsonAsync("api/ParserXpaths", xpathToCreate);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Create Successfull", Severity.Success);
+            xpathToCreate = new ParserXpath();
+            await OnInitializedAsync();
+        }
+        else { Snackbar.Add($"Error: {response.StatusCode}", Severity.Error); };
+    }
+
+    private IEnumerable<string> CheckUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            yield return "URL is required!";
+            yield break;
+        }
+
+        if (!Regex.IsMatch(url, @"https://www.deviantart.com/topic/(\w*)", RegexOptions.IgnoreCase))
+            yield return "URL must be subdomain of devianart.com/topic";
+
+        foreach (var url1 in parserXpaths)
+        {
+            if (url1.Xpath == url)
+                yield return "URL already exist!";
+        }
+    }
+
+}

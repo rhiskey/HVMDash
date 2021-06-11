@@ -1,0 +1,13 @@
+﻿@namespace HVMDash.Client.Components
+@inject IJSRuntime js
+@inject HttpClient Http
+
+<MudButton OnClick="@(()=>StartParser())" StartIcon="@Icons.Material.Filled.RunCircle" >Start posts generator</MudButton>
+
+
+@code {
+    private async Task StartParser()
+    {
+        await Http.PostAsJsonAsync("api/Parser/Action", "start");
+    }
+}
