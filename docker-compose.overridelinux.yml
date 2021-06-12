@@ -5,8 +5,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80
-      #- ASPNETCORE_Kestrel__Certificates__Default__Password=7DA50209-9BA4-419E-9CBB-FDFF5633E936
-      #- ASPNETCORE_Kestrel__Certificates__Default__Path=/root/.aspnet/https/HVMDash.Server.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=strimtv
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/root/.aspnet/https/HVMDash.pfx
       #- CONSOLE_HUB=https://localhost:44349/commandshub
@@ -15,6 +13,5 @@ services:
       - "51217:80"
       - "44349:443"
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets/:/root/.microsoft/usersecrets:ro
-      #- D:/TEMP:/root/.aspnet/https:ro
-      - ${APPDATA}/ASP.NET/Https/:/root/.aspnet/https:ro
+      - ${HOME}/.aspnet/UserSecrets/:/root/.microsoft/usersecrets:ro
+      - ${HOME}/.aspnet/https/:/root/.aspnet/https:ro
