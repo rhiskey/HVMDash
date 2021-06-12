@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  hvmdash.server:
+    image: ${DOCKER_REGISTRY-}hvmdash.server
+    build:
+      context: .
+      dockerfile: Server/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=strimtv
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/root/.aspnet/https/HVMDash.pfx
+      #- CONSOLE_HUB=https://localhost:44349/commandshub
+      - ASPNETCORE_HTTPS_PORT=44349
+    ports:
+      - "51217:80"
+      - "44349:443"
+    volumes:
+      - ${HOME}/.aspnet/UserSecrets/:/root/.microsoft/usersecrets:ro
+      - ${HOME}/.aspnet/https/:/root/.aspnet/https:ro    
