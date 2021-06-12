@@ -3,6 +3,7 @@ using HVMDash.Server.Data;
 using HVMDash.Server.Hubs;
 using HVMDash.Server.Models;
 using HVMDash.Server.Service;
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -52,13 +53,32 @@ namespace HVMDash.Server
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
+                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>(
+                //options =>
+                //{
+                //    // Clients
+                //    var spaClient = ClientBuilder
+                //        .SPA("HVMDash.Client")
+                //        .WithRedirectUri("https://...")
+                //        .WithLogoutRedirectUri("https://...")
+                //        .WithScopes("...")
+                //        .Build();
+                //    spaClient.AllowedCorsOrigins = new[]
+                //    {
+                //        "https://hvm2.kiselevus.keenetic.pro",
+                //        "https://localhost:443"
+                //    };
+
+                //    options.Clients.Add(spaClient);
+                //}
+                );
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddCors();
 
             services.AddResponseCompression(opts =>
             {
