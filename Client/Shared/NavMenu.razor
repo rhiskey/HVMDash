@@ -6,14 +6,11 @@
         <MudNavLink Match="NavLinkMatch.All" Href="">Home</MudNavLink>
     </MudListItem>
     <MudDivider />
-
+    <MudListItem Icon="@Icons.Filled.PostAdd">
+        <MudNavLink Match="NavLinkMatch.All" Href="Posts">Posts</MudNavLink>
+    </MudListItem>
     <AuthorizeView>
         <Authorized>
-            <MudListItem Icon="@Icons.Filled.PostAdd">
-                <MudNavLink Match="NavLinkMatch.All" Href="Posts">Posts</MudNavLink>
-            </MudListItem>
-
-
             <MudListItem Icon="@Icons.Material.Filled.Edit" Text="Edit" InitiallyExpanded="true">
                 <NestedList>
                     <MudListItem Icon="@Icons.Filled.LibraryMusic">

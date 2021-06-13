@@ -55,6 +55,10 @@ namespace HVMDash.Server
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer(
+                options =>
+                {
+                    options.IssuerUri = Configuration.GetConnectionString("HostAddress");
+                }
                                 /// Added new
                                 //options =>
                                 //{
@@ -74,7 +78,7 @@ namespace HVMDash.Server
 
             services.AddAuthentication()
                 .AddIdentityServerJwt()
-                    .AddGoogle(o =>
+                .AddGoogle(o =>
                     {
                         o.ClientId = Configuration["Authentication:Google:ClientId"];
                         o.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
@@ -91,10 +95,8 @@ namespace HVMDash.Server
                     policy
                       .AllowAnyOrigin()
                       //.WithOrigins(Configuration.GetConnectionString("HostAddress"))
-                      .SetIsOriginAllowedToAllowWildcardSubdomains()
+                      //.SetIsOriginAllowedToAllowWildcardSubdomains()
                       .AllowAnyHeader()
-                      //.SetIsOriginAllowed(origin => true) // allow any origin
-                      //.AllowCredentials() // allow credentials
                       .AllowAnyMethod();
                 });
 
