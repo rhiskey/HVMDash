@@ -55,27 +55,35 @@ namespace HVMDash.Server
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer(
-                                options =>
-                                {
-                                    options.Events.RaiseErrorEvents = true;
-                                    options.Events.RaiseInformationEvents = true;
-                                    options.Events.RaiseFailureEvents = true;
-                                    options.Events.RaiseSuccessEvents = true;
+                                /// Added new
+                                //options =>
+                                //{
+                                //    options.Events.RaiseErrorEvents = true;
+                                //    options.Events.RaiseInformationEvents = true;
+                                //    options.Events.RaiseFailureEvents = true;
+                                //    options.Events.RaiseSuccessEvents = true;
 
-                                    options.Cors.CorsPolicyName = "IdentityServer";
+                                //    options.Cors.CorsPolicyName = "IdentityServer";
 
-                                    // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
-                                    options.EmitStaticAudienceClaim = true;
-                                }
+                                //    // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
+                                //    options.EmitStaticAudienceClaim = true;
+                                //}
                                 )
+                //Old One
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
             services.AddAuthentication()
-                .AddIdentityServerJwt();
+                .AddIdentityServerJwt()
+                    .AddGoogle(o =>
+                    {
+                        o.ClientId = Configuration["Authentication:Google:ClientId"];
+                        o.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+                    });
 
             services.AddControllersWithViews();
             services.AddRazorPages();
 
+            // Added new
             services.AddCors(options =>
             {
                 options.AddPolicy("IdentityServer", policy =>
@@ -85,19 +93,21 @@ namespace HVMDash.Server
                       //.WithOrigins(Configuration.GetConnectionString("HostAddress"))
                       .SetIsOriginAllowedToAllowWildcardSubdomains()
                       .AllowAnyHeader()
+                      //.SetIsOriginAllowed(origin => true) // allow any origin
+                      //.AllowCredentials() // allow credentials
                       .AllowAnyMethod();
                 });
 
                 options.DefaultPolicyName = "IdentityServer";
             });
-
-            services.AddSingleton<ICorsPolicyService>((container) => {
-                var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
-                return new DefaultCorsPolicyService(logger)
-                {
-                    AllowAll = true
-                };
-            });
+            //// Added new
+            //services.AddSingleton<ICorsPolicyService>((container) => {
+            //    var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
+            //    return new DefaultCorsPolicyService(logger)
+            //    {
+            //        AllowAll = true
+            //    };
+            //});
 
             services.AddResponseCompression(opts =>
             {
@@ -127,6 +137,7 @@ namespace HVMDash.Server
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
+            //New
             // @see https://github.com/dotnet/aspnetcore/issues/16672
             app.UseCors("IdentityServer");
 
