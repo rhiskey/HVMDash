@@ -52,33 +52,41 @@ namespace HVMDash.Server
             services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            services.AddIdentityServer()
-                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>(
-                //options =>
-                //{
-                //    // Clients
-                //    var spaClient = ClientBuilder
-                //        .SPA("HVMDash.Client")
-                //        .WithRedirectUri("https://...")
-                //        .WithLogoutRedirectUri("https://...")
-                //        .WithScopes("...")
-                //        .Build();
-                //    spaClient.AllowedCorsOrigins = new[]
-                //    {
-                //        "https://hvm2.kiselevus.keenetic.pro",
-                //        "https://localhost:443"
-                //    };
+            services.AddIdentityServer(
+                                options =>
+                                {
+                                    options.Events.RaiseErrorEvents = true;
+                                    options.Events.RaiseInformationEvents = true;
+                                    options.Events.RaiseFailureEvents = true;
+                                    options.Events.RaiseSuccessEvents = true;
 
-                //    options.Clients.Add(spaClient);
-                //}
-                );
+                                    options.Cors.CorsPolicyName = "IdentityServer";
+
+                                    // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
+                                    options.EmitStaticAudienceClaim = true;
+                                }
+                                )
+                .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
-            services.AddCors();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("IdentityServer", policy =>
+                {
+                    policy
+                      .WithOrigins(Configuration.GetConnectionString("HostAddress"))
+                      .SetIsOriginAllowedToAllowWildcardSubdomains()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+                });
+
+                options.DefaultPolicyName = "IdentityServer";
+            });
 
             services.AddResponseCompression(opts =>
             {
@@ -113,6 +121,9 @@ namespace HVMDash.Server
             app.UseIdentityServer();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // @see https://github.com/dotnet/aspnetcore/issues/16672
+            app.UseCors("IdentityServer");
 
             app.UseEndpoints(endpoints =>
             {
