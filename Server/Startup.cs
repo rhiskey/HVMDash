@@ -3,6 +3,7 @@ using HVMDash.Server.Data;
 using HVMDash.Server.Hubs;
 using HVMDash.Server.Models;
 using HVMDash.Server.Service;
+using IdentityServer4.Services;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 
 namespace HVMDash.Server
@@ -79,13 +81,22 @@ namespace HVMDash.Server
                 options.AddPolicy("IdentityServer", policy =>
                 {
                     policy
-                      .WithOrigins(Configuration.GetConnectionString("HostAddress"))
+                      .AllowAnyOrigin()
+                      //.WithOrigins(Configuration.GetConnectionString("HostAddress"))
                       .SetIsOriginAllowedToAllowWildcardSubdomains()
                       .AllowAnyHeader()
                       .AllowAnyMethod();
                 });
 
                 options.DefaultPolicyName = "IdentityServer";
+            });
+
+            services.AddSingleton<ICorsPolicyService>((container) => {
+                var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
+                return new DefaultCorsPolicyService(logger)
+                {
+                    AllowAll = true
+                };
             });
 
             services.AddResponseCompression(opts =>
@@ -116,14 +127,14 @@ namespace HVMDash.Server
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 
+            // @see https://github.com/dotnet/aspnetcore/issues/16672
+            app.UseCors("IdentityServer");
+
             app.UseRouting();
 
             app.UseIdentityServer();
             app.UseAuthentication();
             app.UseAuthorization();
-
-            // @see https://github.com/dotnet/aspnetcore/issues/16672
-            app.UseCors("IdentityServer");
 
             app.UseEndpoints(endpoints =>
             {
