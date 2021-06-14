@@ -34,11 +34,11 @@ namespace HVMDash.Server
             //services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
             //services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
 
-            services.AddDbContext<PlaylistContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("MySQLConnection")));
-            services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("MySQLConnection")));
-            services.AddDbContext<PostedTracksContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("MySQLConnection")));
-            services.AddDbContext<ParserXpathContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("MySQLConnection")));
-            services.AddDbContext<PostContext>(opt => opt.UseMySQL(Configuration.GetConnectionString("MySQLConnection")));
+            services.AddDbContext<PlaylistContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<PostedTracksContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
+            services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
 
             services.AddMemoryCache();
             services.AddControllers().AddNewtonsoftJson(options =>

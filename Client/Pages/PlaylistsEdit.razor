@@ -17,6 +17,45 @@
 
 <h1>Edit Playlists</h1>
 
+<MudExpansionPanels>
+    <MudExpansionPanel>
+        <TitleContent>
+            <div class="d-flex">
+                <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
+                <MudText>Create</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudCard>
+                <MudCardContent>
+                    @*<MudFocusTrap DefaultFocus="DefaultFocus">*@
+                    @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
+                    @if (!String.IsNullOrWhiteSpace(playlistImage))
+                    {
+                        <MudCardMedia Image="@playlistImage" />
+                        <MudChip>@playlistToCreate.FollowersTotal</MudChip>
+                    }
+                    <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
+                    <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
+                    <MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>
+                    <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
+                    @*</MudFocusTrap>*@
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClick">Create</MudButton>
+                </MudCardActions>
+            </MudCard>
+
+            <MudTr>
+
+            </MudTr>
+            <br />
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+<br />
+
 
 @if (Playlists.Count() == 0 || Playlists == null)
 {
@@ -25,7 +64,7 @@
     @*<MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="200px" Height="110px" />*@
     @*<MudProgressCircular Color="Color.Default" Indeterminate="true" />*@
 
-    <MudSimpleTable >
+    <MudSimpleTable>
         <thead>
             <tr>
                 <th></th>
@@ -48,53 +87,14 @@
             </tr>
             <tr>
                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" />
-              
-            </tr>           
+
+            </tr>
         </tbody>
 
     </MudSimpleTable>
 }
 else
 {
-    <MudExpansionPanels>
-        <MudExpansionPanel>
-            <TitleContent>
-                <div class="d-flex">
-                    <MudIcon Icon="@Icons.Material.Filled.Create" Class="mr-3"></MudIcon>
-                    <MudText>Create</MudText>
-                </div>
-            </TitleContent>
-            <ChildContent>
-                <MudCard>
-                    <MudCardContent>
-                        @*<MudFocusTrap DefaultFocus="DefaultFocus">*@
-                        @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
-                        @if (!String.IsNullOrWhiteSpace(playlistImage))
-                        {
-                            <MudCardMedia Image="@playlistImage" />
-                            <MudChip>@playlistToCreate.FollowersTotal</MudChip>
-                        }
-                        <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
-                        <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
-                        <MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>
-                        <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
-                        @*</MudFocusTrap>*@
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClick">Create</MudButton>
-                    </MudCardActions>
-                </MudCard>
-
-                <MudTr>
-
-                </MudTr>
-                <br />
-            </ChildContent>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-
-    <br />
-
     <MudTable Items="@Playlists" Dense="@dense" Hover="@hover" ReadOnly="@ronly" Filter="new Func<Playlist,bool>(FilterFunc)" @bind-SelectedItem="selectedItem" MultiSelection="true" @bind-SelectedItems="selectedItems" SortLabel="Sort By" CommitEditTooltip="Commit Edit" OnCommitEditClick="@OnCommitEditClick">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Playlists</MudText>
@@ -566,6 +566,10 @@ else
             {
                 foreach (var playlistEntity in parsedImportedPlaylistObjectList)
                 {
+                    var isPlaylistExist = await Http.GetFromJsonAsync<Playlist>($"api/Playlists/{playlistEntity.PlaylistId}");
+                    if (isPlaylistExist != null)
+                        continue;
+
                     var playlist = await Http.PostAsJsonAsync<Playlist>(reqAdress, playlistEntity);
                     if (playlist.IsSuccessStatusCode == true)
                         Snackbar.Add($"Imported {playlistEntity.PlaylistName} Successfull", MudBlazor.Severity.Success);

@@ -96,6 +96,20 @@ namespace HVMDash.Server.Controllers
             return playlist;
         }
 
+        // GET: api/Playlists/uri/uri
+        [HttpGet("uri/{uri}")]
+        public async Task<ActionResult<Playlist>> GetPlaylistByUri(string uri)
+        {
+            var playlist = await _context.Playlists.Where(a => a.PlaylistId == uri).FirstOrDefaultAsync();
+
+            if (playlist == null)
+            {
+                return NotFound();
+            }
+
+            return playlist;
+        }
+
         //// GET: api/Playlists?playlistName=name
         //[HttpGet("{id}/{playlistName}")]
         //public async Task<ActionResult<Playlist>> GetPlaylist(int id, string name)
