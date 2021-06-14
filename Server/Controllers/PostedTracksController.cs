@@ -20,9 +20,9 @@ namespace HVMDash.Server.Controllers
         private readonly string cacheKey = "LastPostedTracksList";
         private readonly MemoryCacheEntryOptions cacheExpiryOptions = new()
         {
-            AbsoluteExpiration = DateTime.Now.AddHours(1),
+            AbsoluteExpiration = DateTime.Now.AddMinutes(1),
             Priority = CacheItemPriority.High,
-            SlidingExpiration = TimeSpan.FromMinutes(30)
+            SlidingExpiration = TimeSpan.FromSeconds(30)
         };
         public PostedTracksController(IMemoryCache memoryCache, PostedTracksContext context)
         {
