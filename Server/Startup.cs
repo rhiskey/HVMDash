@@ -55,23 +55,23 @@ namespace HVMDash.Server
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             services.AddIdentityServer(
-                options =>
-                {
-                    options.IssuerUri = Configuration.GetConnectionString("HostAddress");
-                }
-                                /// Added new
                                 //options =>
                                 //{
-                                //    options.Events.RaiseErrorEvents = true;
-                                //    options.Events.RaiseInformationEvents = true;
-                                //    options.Events.RaiseFailureEvents = true;
-                                //    options.Events.RaiseSuccessEvents = true;
-
-                                //    options.Cors.CorsPolicyName = "IdentityServer";
-
-                                //    // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
-                                //    options.EmitStaticAudienceClaim = true;
+                                //    options.IssuerUri = Configuration.GetConnectionString("HostAddress");
                                 //}
+                                /// Added new
+                                options =>
+                                 {
+                                     options.Events.RaiseErrorEvents = true;
+                                     options.Events.RaiseInformationEvents = true;
+                                     options.Events.RaiseFailureEvents = true;
+                                     options.Events.RaiseSuccessEvents = true;
+
+                                     options.Cors.CorsPolicyName = "IdentityServer";
+
+                                     // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
+                                     options.EmitStaticAudienceClaim = true;
+                                 }
                                 )
                 //Old One
                 .AddApiAuthorization<ApplicationUser, ApplicationDbContext>();
@@ -102,6 +102,7 @@ namespace HVMDash.Server
 
                 options.DefaultPolicyName = "IdentityServer";
             });
+
             //// Added new
             //services.AddSingleton<ICorsPolicyService>((container) => {
             //    var logger = container.GetRequiredService<ILogger<DefaultCorsPolicyService>>();
