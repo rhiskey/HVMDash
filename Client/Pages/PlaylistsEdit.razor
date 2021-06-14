@@ -186,7 +186,8 @@ else
     <br />
     @if (selectedItems.Count > 0)
     {
-        <MudButton @onclick="SelectStatusModal" Color="Color.Secondary" Variant="Variant.Filled">Change status</MudButton>
+        <MudButton @onclick="SelectStatusModal" Color="Color.Secondary" Variant="Variant.Filled">Change Status</MudButton>
+        <MudButton @onclick="DeleteSelected" Color="Color.Secondary" Variant="Variant.Filled">Delete Selected</MudButton>
     }
     <MudMessageBox @ref="mbox" Title="Warning" CancelText="Cancel">
         <MessageContent>
@@ -331,6 +332,7 @@ else
             {
                 await Http.DeleteAsync($"api/Playlists/{playlistId}");
                 Snackbar.Add("Deleted Successfull", MudBlazor.Severity.Success);
+                StateHasChanged();
                 await OnInitializedAsync();
 
             }
@@ -351,8 +353,9 @@ else
         {
             Snackbar.Add("Create Successfull", MudBlazor.Severity.Success);
             playlistToCreate = new Playlist();
-            await OnInitializedAsync();
             StateHasChanged();
+            await OnInitializedAsync();
+
         }
         else { Snackbar.Add($"Error: {response.StatusCode}", MudBlazor.Severity.Error); };
     }
@@ -506,6 +509,36 @@ else
                 }
                 else Snackbar.Add($"Error: {response.StatusCode}", MudBlazor.Severity.Error);
 
+            }
+        }
+
+    }
+
+    protected async Task DeleteSelected()
+    {
+        Snackbar.Add("Commit Delete Handler Invoked");
+
+        bool? result = await mbox.Show();
+        state = result == null ? "Cancelled" : "Deleted!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete selected playlists?"))
+            {
+                foreach (var playlist in selectedItems)
+                {
+                    var response = await Http.DeleteAsync($"api/Playlists/{playlist.Id}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        StateHasChanged();
+                    }
+                    else Snackbar.Add($"Error: {response.StatusCode}", MudBlazor.Severity.Error);
+
+                }
+                Snackbar.Add("Deleted Successfull", MudBlazor.Severity.Success);
+                await OnInitializedAsync();
             }
         }
 

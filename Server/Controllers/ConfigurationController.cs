@@ -1,10 +1,12 @@
 ﻿using HVMDash.Server.Context;
+using HVMDash.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using vkaudioposter_ef.Model;
 
@@ -22,58 +24,84 @@ namespace HVMDash.Server.Controllers
 
         // GET: Configuration
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Configuration>>> GetConfigurations()
+        public async Task<ActionResult<string>> GetConfigurations()
         {
-            return await _context.Configurations.ToListAsync();
+            var cfg = await _context.Configurations.FirstOrDefaultAsync();
+            //var cfgToReturn = new { HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod };
+            //return AcceptedAtAction("GetConfig", new { hours = cfg.HoursPeriod, minutes = cfg.MinutesPeriod });
+            var cfgToReturned = new SimpleSettings{ Id= cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod};
+
+            var jsonString = JsonSerializer.Serialize(cfgToReturned);
+            return CreatedAtAction("GetConfigurations", new { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod }, jsonString);
         }
 
-        // GET: Configuration/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Configuration>> GetConfiguration(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
 
-            var Configuration = await _context.Configurations
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (Configuration == null)
-            {
-                return NotFound();
-            }
+        //// GET: Configuration
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Configuration>>> GetConfigurations()
+        //{
+        //    return await _context.Configurations.ToListAsync();
+        //}
 
-            return Configuration;
-        }
+        //// GET: Configuration/5
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<Configuration>> GetConfiguration(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-        // POST: Configuration/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        //[ValidateAntiForgeryToken]
-        public async Task<ActionResult<Configuration>> PostConfig(Configuration Configuration)
-        {
-            //if (ModelState.IsValid)
-            //{
-            _context.Add(Configuration);
-            await _context.SaveChangesAsync();
-            //return RedirectToAction(nameof(Index));
-            //}
-            return CreatedAtAction("GetConfig", new { id = Configuration.Id }, Configuration);
-        }
+        //    var Configuration = await _context.Configurations
+        //        .FirstOrDefaultAsync(m => m.Id == id);
+        //    if (Configuration == null)
+        //    {
+        //        return NotFound();
+        //    }
 
+        //    return Configuration;
+        //}
+
+        //// POST: Configuration/Create
+        //// To protect from overposting attacks, enable the specific properties you want to bind to.
+        //// For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        //[HttpPost]
+        ////[ValidateAntiForgeryToken]
+        //public async Task<ActionResult<Configuration>> PostConfig(Configuration Configuration)
+        //{
+        //    //if (ModelState.IsValid)
+        //    //{
+        //    _context.Add(Configuration);
+        //    await _context.SaveChangesAsync();
+        //    //return RedirectToAction(nameof(Index));
+        //    //}
+        //    return CreatedAtAction("GetConfig", new { id = Configuration.Id }, Configuration);
+        //}
+
+        //TODO
         // GET: Configuration/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<Configuration>> PutXpath(int id, Configuration Configuration)
+        public async Task<ActionResult<SimpleSettings>> PutXpath(int id, SimpleSettings ss)
         {
-            if (id != Configuration.Id)
+            Configuration config;
+            SimpleSettings simpleSettings = new();
+            if (id != ss.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(Configuration).State = EntityState.Modified;
+            config = await _context.Configurations.FindAsync(id);
+
+            _context.Entry(config).State = EntityState.Modified;
             try
             {
+                config.HoursPeriod = ss.HoursPeriod;
+                config.MinutesPeriod = ss.MinutesPeriod;
+
+                simpleSettings.Id = config.Id;
+                simpleSettings.HoursPeriod = config.HoursPeriod;
+                simpleSettings.MinutesPeriod = config.MinutesPeriod;
+               
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -88,27 +116,25 @@ namespace HVMDash.Server.Controllers
                 }
             }
 
-            var res = await _context.Configurations.FindAsync(id);
-            return res;
-
+            return simpleSettings;
         }
 
 
-        // GET: Configuration/Delete/5
-        [HttpDelete("{id}")]
-        public async Task<ActionResult<Configuration>> DeleteConfig(int? id)
-        {
-            var xpath = await _context.Configurations.FindAsync(id);
-            if (xpath == null)
-            {
-                return NotFound();
-            }
+        //// GET: Configuration/Delete/5
+        //[HttpDelete("{id}")]
+        //public async Task<ActionResult<Configuration>> DeleteConfig(int? id)
+        //{
+        //    var xpath = await _context.Configurations.FindAsync(id);
+        //    if (xpath == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            _context.Configurations.Remove(xpath);
-            await _context.SaveChangesAsync();
+        //    _context.Configurations.Remove(xpath);
+        //    await _context.SaveChangesAsync();
 
-            return xpath;
-        }
+        //    return xpath;
+        //}
 
         private bool ConfigurationExists(int id)
         {

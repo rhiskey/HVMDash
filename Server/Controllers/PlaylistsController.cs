@@ -168,16 +168,23 @@ namespace HVMDash.Server.Controllers
         public async Task<ActionResult<Playlist>> PostPlaylist(Playlist playlist)
         {
             memoryCache.Remove(cacheKey);
+            var isPlaylistExist = await _context.Playlists.FirstOrDefaultAsync(e => e.PlaylistId == playlist.PlaylistId);
+            if (isPlaylistExist != null)
+            {
+                return BadRequest();
+            }
+            else
+            {
+                var created = _context.Playlists.Add(playlist).Entity;
+                var res = await _context.SaveChangesAsync();
 
-            var created = _context.Playlists.Add(playlist).Entity;
-            var res = await _context.SaveChangesAsync();
-
-            _logger.LogInformation($"Posted Playlist {created.Id}");
-            //if (n > 0)
-            //{
-            //    memoryCache.Set(cacheKey, playlists, cacheExpiryOptions);
-            //}
-            return CreatedAtAction("PostPlaylist", new { id = created.Id }, created);
+                _logger.LogInformation($"Posted Playlist {created.Id}");
+                //if (n > 0)
+                //{
+                //    memoryCache.Set(cacheKey, playlists, cacheExpiryOptions);
+                //}
+                return CreatedAtAction("PostPlaylist", new { id = created.Id }, created);
+            }
         }
 
         // DELETE: api/Playlists/5

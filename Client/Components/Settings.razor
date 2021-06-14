@@ -1,0 +1,48 @@
+﻿@*@page "/settings"*@
+@namespace HVMDash.Client.Components
+@using HVMDash.Shared
+@using System.Net.Http.Json
+@using System.Text.Json
+
+
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+
+@*@bind-Time="time*@
+<MudTimePicker PickerVariant="PickerVariant.Dialog" Label="Posts delay" Time="@time" TimeChanged="@OnTimePickerChange" TimeEditMode="TimeEditMode.Normal" Color="Color.Success" />
+
+@code {
+
+    TimeSpan? time { get; set; }
+    private SimpleSettings config;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string reqAdress = $"api/Configuration";
+        var response = await Http.GetFromJsonAsync<object>(reqAdress);
+
+        string jsonString = JsonSerializer.Serialize(response);
+
+        config = JsonSerializer.Deserialize<SimpleSettings>(jsonString);
+
+        time = new TimeSpan(config.HoursPeriod, config.MinutesPeriod, 00);
+
+    }
+
+    protected async Task OnTimePickerChange()
+    {
+        var changedHours = time.Value.Hours;
+        var changedMinutes = time.Value.Minutes;
+
+        config.HoursPeriod = changedHours;
+        config.MinutesPeriod = changedMinutes;
+
+        string reqAdress = $"api/Configuration/{config.Id}";
+        var response = await Http.PutAsJsonAsync(reqAdress, config);
+        Console.WriteLine(response);
+
+        StateHasChanged();
+        await OnInitializedAsync();
+    }
+
+}

@@ -42,7 +42,7 @@ namespace HVMDash.Server.Controllers
             SpotifyAPIPlaylist pl2Return = new SpotifyAPIPlaylist { Name = name, Images = images, Followers = flwrs };
 
             var jsonString = JsonSerializer.Serialize(pl2Return);
-            return CreatedAtAction("GetSpotify", jsonString);
+            return CreatedAtAction("GetSpotify", new { Name = name, Images = images, Followers = flwrs }, jsonString);
             ///*Content(v, "application/json", encod);
         }
 
