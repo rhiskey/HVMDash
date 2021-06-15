@@ -9,7 +9,7 @@
 @inject HttpClient Http
 
 @*@bind-Time="time*@
-<MudTimePicker PickerVariant="PickerVariant.Dialog" Label="Posts delay" Time="@time" TimeChanged="@OnTimePickerChange" TimeEditMode="TimeEditMode.Normal" Color="Color.Success" />
+<MudTimePicker PickerVariant="PickerVariant.Dialog" Label="Posts delay" Time="@time" TimeChanged="@(()=>OnTimePickerChange(time))" TimeEditMode="TimeEditMode.Normal" Color="Color.Success" />
 
 @code {
 
@@ -29,7 +29,7 @@
 
     }
 
-    protected async Task OnTimePickerChange()
+    protected async Task OnTimePickerChange(TimeSpan? time)
     {
         var changedHours = time.Value.Hours;
         var changedMinutes = time.Value.Minutes;
@@ -39,7 +39,7 @@
 
         string reqAdress = $"api/Configuration/{config.Id}";
         var response = await Http.PutAsJsonAsync(reqAdress, config);
-        Console.WriteLine(response);
+        Console.WriteLine(response.Content);
 
         StateHasChanged();
         await OnInitializedAsync();

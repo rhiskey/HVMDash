@@ -7,7 +7,7 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
         <MudAppBarSpacer />
-        <MudBadge Content="@ppCount" Color="Color.Primary" Overlap="true" Class="mx-6 my-4">
+        <MudBadge Content="@ppCount" Color="Color.Warning" Overlap="true" Class="mx-6 my-4">
             <MudIcon Icon="@Icons.Material.Filled.Drafts" Color="Color.Default" />
         </MudBadge>
         <MudToggleIconButton Toggled="@SwitchRoleValue" ToggledChanged="@((bool t) => CheckedRoleChanged(t))"
