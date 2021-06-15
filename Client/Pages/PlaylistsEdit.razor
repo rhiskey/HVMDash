@@ -37,7 +37,7 @@
                     }
                     <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
                     <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
-                    <MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>
+                    @*<MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>*@
                     <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
                     @*</MudFocusTrap>*@
                 </MudCardContent>
@@ -115,7 +115,7 @@ else
             <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.PlaylistId)">Spotify URI</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Playlist, object>(x=>x.PlaylistName)">Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.FollowersTotal)">Followers</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.Mood)">Mood</MudTableSortLabel></MudTh>
+            @*<MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.Mood)">Mood</MudTableSortLabel></MudTh>*@
             <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Playlist, object>(x=>x.UpdateDate)">UpdateDate</MudTableSortLabel></MudTh>
         </HeaderContent>
@@ -137,7 +137,7 @@ else
                 <!--</MudPopover>-->
             </MudTd>
             <MudTd DataLabel="Followers"><MudChip>@context.FollowersTotal</MudChip></MudTd>
-            <MudTd DataLabel="Mood">@context.Mood</MudTd>
+            @*<MudTd DataLabel="Mood">@context.Mood</MudTd>*@
             <MudTd DataLabel="Status">
                 @switch (context.Status)
                     {
@@ -161,9 +161,9 @@ else
                 <MudTextField @bind-Value="@context.PlaylistName" Required />
             </MudTd>
             <MudTd><MudChip>@context.FollowersTotal</MudChip></MudTd>
-            <MudTd DataLabel="Mood">
+            @*<MudTd DataLabel="Mood">
                 <MudSlider @bind-Value="@context.Mood" Min="0" Max="10" Color="Color.Info">Value: @context.Mood.ToString()</MudSlider>
-            </MudTd>
+            </MudTd>*@
             <MudTd DataLabel="Status">
                 <MudSwitch @bind-Checked="@context.Status" Color="Color.Secondary">int: @context.Status</MudSwitch>
             </MudTd>
