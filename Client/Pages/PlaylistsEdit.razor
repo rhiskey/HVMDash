@@ -30,11 +30,11 @@
                 <MudCardContent>
                     @*<MudFocusTrap DefaultFocus="DefaultFocus">*@
                     @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
-                    @if (!String.IsNullOrWhiteSpace(playlistImage))
+                   @* @if (!String.IsNullOrWhiteSpace(playlistImage))
                     {
                         <MudCardMedia Image="@playlistImage" />
                         <MudChip>@playlistToCreate.FollowersTotal</MudChip>
-                    }
+                    }*@
                     <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
                     <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
                     @*<MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>*@
