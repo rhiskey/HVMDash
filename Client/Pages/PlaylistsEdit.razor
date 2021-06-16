@@ -17,7 +17,7 @@
 
 <h1>Edit Playlists</h1>
 
-<MudExpansionPanels>
+@*<MudExpansionPanels>
     <MudExpansionPanel>
         <TitleContent>
             <div class="d-flex">
@@ -25,10 +25,10 @@
                 <MudText>Create</MudText>
             </div>
         </TitleContent>
-        <ChildContent>
+        <ChildContent>*@
             <MudCard>
                 <MudCardContent>
-                    @*<MudFocusTrap DefaultFocus="DefaultFocus">*@
+                    <MudFocusTrap DefaultFocus="DefaultFocus">
                     @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
                    @* @if (!String.IsNullOrWhiteSpace(playlistImage))
                     {
@@ -39,20 +39,20 @@
                     <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
                     @*<MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>*@
                     <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
-                    @*</MudFocusTrap>*@
+                    </MudFocusTrap>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClick">Create</MudButton>
                 </MudCardActions>
             </MudCard>
 
-            <MudTr>
+            @*<MudTr>
 
             </MudTr>
             <br />
         </ChildContent>
     </MudExpansionPanel>
-</MudExpansionPanels>
+</MudExpansionPanels>*@
 
 <br />
 
