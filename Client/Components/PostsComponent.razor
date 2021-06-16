@@ -139,7 +139,7 @@ else
                         </MudCardContent>
                         <MudCardActions>
                             <MudTooltip Text="VK Community post link"><MudIconButton Icon="@Icons.Material.Filled.Link" Color="Color.Default" Link="@Formatters.GetPostLink(post.OwnerId, post.PostId)" Target="_blank" /></MudTooltip>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(e=>DeletePost(post.Id))" />
+                            @*<MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(e=>DeletePost(post.Id))" />*@
                         </MudCardActions>
                     </MudCard>
                 </MudPaper>
