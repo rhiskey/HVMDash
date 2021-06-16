@@ -156,6 +156,7 @@ else
         <RowEditingTemplate>
             <MudTd DataLabel="URI">
                 <MudTextField @bind-Value="@context.PlaylistId" Required />
+                <MudCard><MudCardMedia Image="@context.ImageUrl" Height="100" /></MudCard>
             </MudTd>
             <MudTd DataLabel="Name">
                 <MudTextField @bind-Value="@context.PlaylistName" Required />
