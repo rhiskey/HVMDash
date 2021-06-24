@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using vkaudioposter_ef.Model;
-
-namespace HVMDash.Shared
+﻿namespace HVMDash.Shared
 {
     public class SimpleSettings //:Configuration
     {

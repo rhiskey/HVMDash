@@ -9,20 +9,15 @@ namespace HVMDash.Server
         public static string SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET;
         public static void Main(string[] args)
         {
-            //DotNetEnv.Env.TraversePath().Load();
-
             vkaudioposter_ef.Model.Configuration cfg;
 
             using (var context = new vkaudioposter_ef.AppContext())
             {
                 cfg = context.Configurations.FirstOrDefault();
             }
-
             SPOTIFY_CLIENT_ID = cfg.SpotifyClientId;
             SPOTIFY_CLIENT_SECRET = cfg.SpotifyClientSecret;
 
-            //SPOTIFY_CLIENT_ID = DotNetEnv.Env.GetString("SPOTIFY_CLIENT_ID");
-            //SPOTIFY_CLIENT_SECRET = DotNetEnv.Env.GetString("SPOTIFY_CLIENT_SECRET");
 
             CreateHostBuilder(args).Build().Run();
         }

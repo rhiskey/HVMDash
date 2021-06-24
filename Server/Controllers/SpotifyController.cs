@@ -32,9 +32,6 @@ namespace HVMDash.Server.Controllers
             var images = playlist.Images;
             var flwrs = playlist.Followers;
 
-            //var v = new { Name = name, Images = images, Followers = flwrs };
-
-
             if (name == null)
             {
                 return NotFound();
@@ -43,7 +40,6 @@ namespace HVMDash.Server.Controllers
 
             var jsonString = JsonSerializer.Serialize(pl2Return);
             return CreatedAtAction("GetSpotify", new { Name = name, Images = images, Followers = flwrs }, jsonString);
-            ///*Content(v, "application/json", encod);
         }
 
         //// GET: api/Spotify/name?id=123456

@@ -14,7 +14,6 @@ namespace HVMDash.Server
 {
     public class Startup
     {
-        //private static string mySQLConn;
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -27,12 +26,6 @@ namespace HVMDash.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSignalR();
-            //MSSQL Configuration.GetConnectionString("MSSQL")
-            //services.AddDbContext<PlaylistContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
-            //services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
-            //services.AddDbContext<PostedTracksContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
-            //services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
-            //services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Program.MSSQLConnection));
 
             services.AddDbContext<PlaylistContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<ConsolePhotostockContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
@@ -88,17 +81,5 @@ namespace HVMDash.Server
                 endpoints.MapFallbackToFile("index.html");
             });
         }
-
-        #region Config
-        /// <summary>
-        /// 
-        /// </summary>
-        //private static void LoadConfigsFromEnv()
-        //{
-        //    DotNetEnv.Env.Load();
-        //    mySQLConn = DotNetEnv.Env.GetString("MYSQL_CONNECTION");
-
-        //}
-        #endregion
     }
 }

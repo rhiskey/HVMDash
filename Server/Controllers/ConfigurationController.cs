@@ -1,10 +1,7 @@
 ﻿using HVMDash.Server.Context;
 using HVMDash.Shared;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -29,7 +26,7 @@ namespace HVMDash.Server.Controllers
             var cfg = await _context.Configurations.FirstOrDefaultAsync();
             //var cfgToReturn = new { HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod };
             //return AcceptedAtAction("GetConfig", new { hours = cfg.HoursPeriod, minutes = cfg.MinutesPeriod });
-            var cfgToReturned = new SimpleSettings{ Id= cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod};
+            var cfgToReturned = new SimpleSettings { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod };
 
             var jsonString = JsonSerializer.Serialize(cfgToReturned);
             return CreatedAtAction("GetConfigurations", new { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod }, jsonString);
@@ -101,7 +98,7 @@ namespace HVMDash.Server.Controllers
                 simpleSettings.Id = config.Id;
                 simpleSettings.HoursPeriod = config.HoursPeriod;
                 simpleSettings.MinutesPeriod = config.MinutesPeriod;
-               
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
