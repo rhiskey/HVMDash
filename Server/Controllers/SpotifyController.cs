@@ -42,6 +42,48 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("GetSpotify", new { Name = name, Images = images, Followers = flwrs }, jsonString);
         }
 
+
+        [HttpGet("oneimgflwrs")]
+        public async Task<ActionResult<string>> GetSpotifyImageFlrs(string id)
+        {
+            string name = "";
+            if (id == null || id == "")
+            {
+                return NotFound();
+            }
+
+            var config = SpotifyClientConfig
+                        .CreateDefault()
+                        .WithAuthenticator(new ClientCredentialsAuthenticator(Program.SPOTIFY_CLIENT_ID, Program.SPOTIFY_CLIENT_SECRET));
+
+            var api = new SpotifyClient(config);
+
+            var playlist = await api.Playlists.Get(id);
+            name = playlist.Name;
+            var images = playlist.Images;
+            var flwrs = playlist.Followers;
+
+            string imgUrl = "";
+            int followers = flwrs.Total;
+
+            foreach(var img in images)
+            {
+                if(!string.IsNullOrEmpty(img.Url))
+                {
+                    imgUrl = img.Url;
+                }
+            }
+    
+            if (name == null)
+            {
+                return NotFound();
+            }
+            SpotifyAPIPlaylistSimple pl2Return = new SpotifyAPIPlaylistSimple { Name = name, Image = imgUrl, Followers = followers };
+
+            var jsonString = JsonSerializer.Serialize(pl2Return);
+            return CreatedAtAction("GetSpotify", new { Name = name, Image = imgUrl, Followers = followers }, jsonString);
+        }
+
         //// GET: api/Spotify/name?id=123456
         //[HttpGet("image")]
         //public async Task<ActionResult<string>> GetSpotifyImage(string? id)

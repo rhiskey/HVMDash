@@ -10,4 +10,11 @@ namespace HVMDash.Shared
         public List<Image> Images { get; set; }
         public Followers Followers { get; set; }
     }
+
+    public class SpotifyAPIPlaylistSimple
+    {
+        public string Name { get; set; }
+        public string Image { get; set; }
+        public int Followers { get; set; }
+    }
 }
