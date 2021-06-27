@@ -26,33 +26,33 @@
             </div>
         </TitleContent>
         <ChildContent>*@
-            <MudCard>
-                <MudCardContent>
-                    <MudFocusTrap DefaultFocus="DefaultFocus">
-                    @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
-                   @* @if (!String.IsNullOrWhiteSpace(playlistImage))
-                    {
-                        <MudCardMedia Image="@playlistImage" />
-                        <MudChip>@playlistToCreate.FollowersTotal</MudChip>
-                    }*@
-                    <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
-                    <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
-                    @*<MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>*@
-                    <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
-                    </MudFocusTrap>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClick">Create</MudButton>
-                </MudCardActions>
-            </MudCard>
+<MudCard>
+    <MudCardContent>
+        <MudFocusTrap DefaultFocus="DefaultFocus">
+            @*<MudHidden Breakpoint="Breakpoint.MdAndUp" Invert="true">*@
+            @* @if (!String.IsNullOrWhiteSpace(playlistImage))
+                {
+                    <MudCardMedia Image="@playlistImage" />
+                    <MudChip>@playlistToCreate.FollowersTotal</MudChip>
+                }*@
+            <MudTextField AutoFocus="false" FullWidth="true" @bind-Value="@playlistToCreate.PlaylistId" Label="Spotify URI" Immediate="true" Variant="Variant.Outlined" Validation="@(new Func<string, IEnumerable<string>>(CheckUri))" @ref="spotiLinkField" Required="true"></MudTextField>
+            <MudTextField @bind-Value="@playlistToCreate.PlaylistName" Label="Name" Variant="Variant.Outlined" Immediate="true" @ref="spotiNameField"></MudTextField>
+            @*<MudSlider @bind-Value="@playlistToCreate.Mood" Min="0" Max="10" Color="Color.Info">Mood: @playlistToCreate.Mood.ToString()</MudSlider>*@
+            <MudSwitch @bind-Checked="@playlistToCreate.Status" Color="Color.Secondary">Status: @playlistToCreate.Status</MudSwitch>
+        </MudFocusTrap>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton ButtonType="ButtonType.Submit" Color="Color.Primary" Variant="Variant.Filled" OnClick="@OnCreateClick">Create</MudButton>
+    </MudCardActions>
+</MudCard>
 
-            @*<MudTr>
+@*<MudTr>
 
-            </MudTr>
-            <br />
-        </ChildContent>
-    </MudExpansionPanel>
-</MudExpansionPanels>*@
+                </MudTr>
+                <br />
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>*@
 
 <br />
 
@@ -145,8 +145,8 @@ else
             </MudTd>
             <MudTd><MudChip>@context.FollowersTotal</MudChip></MudTd>
             @*<MudTd DataLabel="Mood">
-                <MudSlider @bind-Value="@context.Mood" Min="0" Max="10" Color="Color.Info">Value: @context.Mood.ToString()</MudSlider>
-            </MudTd>*@
+                    <MudSlider @bind-Value="@context.Mood" Min="0" Max="10" Color="Color.Info">Value: @context.Mood.ToString()</MudSlider>
+                </MudTd>*@
             <MudTd DataLabel="Status">
                 <MudSwitch @bind-Checked="@context.Status" Color="Color.Secondary">int: @context.Status</MudSwitch>
             </MudTd>
@@ -164,6 +164,15 @@ else
     <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
     <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
     <MudSwitch @bind-Checked="@ronly" Color="Color.Tertiary">Read Only</MudSwitch>
+    <MudSwitch Checked="showOnlyEnabled" CheckedChanged="((bool t) => OnCheckedEnabledChange(t))">Show only enabled: @showOnlyEnabled</MudSwitch>
+
+    @*<MudSelect T="int" Label="Status" HelperText="Show only playlists with status" MultiSelection="true" @bind-Value="value" @bind-SelectedValues="options">
+        @foreach (var status in Playlists.First().Status)
+        {
+            <MudSelectItem T="int" Value="@state">@state</MudSelectItem>
+        }
+    </MudSelect>*@
+
     @*<MudText Inline="true">Selected: @selectedItem?.PlaylistName</MudText>*@
     <MudText Inline="true">Selected items: @(selectedItems==null ? "" : string.Join(", ", selectedItems.OrderBy(x=>x.PlaylistName).Select(x=>x.PlaylistName)))</MudText>
     <br />
@@ -251,12 +260,18 @@ else
 
     MudTextField<string> spotiLinkField, spotiNameField;
     public int UpdateProgressValue { get; set; }
+    public bool showOnlyEnabled { get; set; } = false;
+
+    private IEnumerable<Playlist> EnabledPlaylists = new List<Playlist>();
+    private IEnumerable<Playlist> DisabledPlaylists = new List<Playlist>();
 
 
     protected override async Task OnInitializedAsync()
     {
         Playlists = await Http.GetFromJsonAsync<List<Playlist>>("api/Playlists");
 
+        EnabledPlaylists = Playlists.Where(e => e.Status == 1);
+        DisabledPlaylists = Playlists.Where(e => e.Status == 0);
         //UpdatePlaylistImagesAndFollowers();
     }
 
@@ -605,6 +620,21 @@ else
             _isOpenImagePlaylist = true;
     }
 
+    void OnCheckedEnabledChange(bool t)
+    {
+        if (showOnlyEnabled == false)
+        {
+            Playlists = EnabledPlaylists;
+            showOnlyEnabled = true;
+        }
+        else
+        {
+            Playlists = DisabledPlaylists;
+            showOnlyEnabled = false;
+        }
+        StateHasChanged();
+
+    }
 
     async ValueTask IAsyncDisposable.DisposeAsync()
     {
