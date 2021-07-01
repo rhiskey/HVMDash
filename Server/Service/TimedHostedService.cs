@@ -30,11 +30,15 @@ namespace HVMDash.Server.Service
         {
             _logger.LogInformation("Timed Hosted Service running.");
 
+#if DEBUG
+            _logger.LogInformation("Mode=Debug");
+#else
+
             _timer = new Timer(DoWork, null, TimeSpan.Zero,
                 TimeSpan.FromDays(3));
 
             _timer2 = new Timer(DoUpdate, null, TimeSpan.Zero, TimeSpan.FromDays(7));
-
+#endif
             return Task.CompletedTask;
         }
 
