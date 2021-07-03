@@ -74,7 +74,7 @@ namespace HVMDash.Server.Controllers
             {
                 return NotFound();
             }
-            object toReturn = name;
+            object toReturn = new { Name = name};
             
             var jsonString = JsonSerializer.Serialize(toReturn);
             return CreatedAtAction("GetSpotify", new { Name = name }, jsonString);
