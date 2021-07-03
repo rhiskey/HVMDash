@@ -19,8 +19,9 @@ namespace HVMDash.Server.Service
     {
         private int executionCount = 0;
         private readonly ILogger<TimedHostedService> _logger;
-        private Timer _timer, _timer2;
-        private readonly PlaylistContext _context;
+        private Timer _timer;
+        //_timer2;
+        //private readonly PlaylistContext _context;
         public TimedHostedService(ILogger<TimedHostedService> logger)
         {
             _logger = logger;

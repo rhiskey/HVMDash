@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="SpotifyAPI.Web" Version="6.2.0" />
-    <PackageReference Include="VkNet" Version="1.62.0" />
+    <PackageReference Include="VkNet" Version="1.64.0" />
     <PackageReference Include="VkNet.AudioBypassService" Version="1.7.0" />
   </ItemGroup>
 

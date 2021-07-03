@@ -1,6 +1,7 @@
 ﻿using HVMDash.Shared;
 using Microsoft.AspNetCore.Mvc;
 using SpotifyAPI.Web;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -16,7 +17,7 @@ namespace HVMDash.Server.Controllers
         public async Task<ActionResult<string>> GetSpotify(string id)
         {
             string name = "";
-            if (id == null || id == "")
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
@@ -36,18 +37,54 @@ namespace HVMDash.Server.Controllers
             {
                 return NotFound();
             }
-            SpotifyAPIPlaylist pl2Return = new SpotifyAPIPlaylist { Name = name, Images = images, Followers = flwrs };
+            SpotifyAPIPlaylist pl2Return = new() { Name = name, Images = images, Followers = flwrs };
 
             var jsonString = JsonSerializer.Serialize(pl2Return);
             return CreatedAtAction("GetSpotify", new { Name = name, Images = images, Followers = flwrs }, jsonString);
         }
 
+        // GET: api/Spotify/searchname?uri=asdavs1
+        [HttpGet("searchname")]
+        public async Task<ActionResult<string>> GetSearchName(string uri)
+        {
+            string name = "";
+            if (string.IsNullOrEmpty(uri))
+            {
+                return NotFound();
+            }
+
+            var config = SpotifyClientConfig
+                        .CreateDefault()
+                        .WithAuthenticator(new ClientCredentialsAuthenticator(Program.SPOTIFY_CLIENT_ID, Program.SPOTIFY_CLIENT_SECRET));
+
+            var api = new SpotifyClient(config);
+
+            var track = await api.Tracks.Get(uri);
+            StringBuilder sb = new StringBuilder("", 250);
+
+            foreach (var artist in track.Artists)
+            {
+                sb.AppendFormat("{0} ", artist.Name);
+            }
+            sb.AppendJoin(separator: ' ', track.Name);
+
+            name = sb.ToString();
+
+            if (string.IsNullOrEmpty(name))
+            {
+                return NotFound();
+            }
+            object toReturn = name;
+            
+            var jsonString = JsonSerializer.Serialize(toReturn);
+            return CreatedAtAction("GetSpotify", new { Name = name }, jsonString);
+        }
 
         [HttpGet("oneimgflwrs")]
         public async Task<ActionResult<string>> GetSpotifyImageFlrs(string id)
         {
             string name = "";
-            if (id == null || id == "")
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
@@ -78,7 +115,7 @@ namespace HVMDash.Server.Controllers
             {
                 return NotFound();
             }
-            SpotifyAPIPlaylistSimple pl2Return = new SpotifyAPIPlaylistSimple { Name = name, Image = imgUrl, Followers = followers };
+            SpotifyAPIPlaylistSimple pl2Return = new() { Name = name, Image = imgUrl, Followers = followers };
 
             var jsonString = JsonSerializer.Serialize(pl2Return);
             return CreatedAtAction("GetSpotify", new { Name = name, Image = imgUrl, Followers = followers }, jsonString);
