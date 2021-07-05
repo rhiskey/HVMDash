@@ -76,7 +76,10 @@ namespace HVMDash.Server.Controllers
             var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
             var msgId = await SendVK(ref cfg, ref message, ref userid, ref ownerid, ref mediaid);
 
-            jsonString = JsonSerializer.Serialize(msgId);
+            VkMessageSendModel msg = new();
+            msg.sendMessageId = msgId;
+
+            jsonString = JsonSerializer.Serialize(msg);
 
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
