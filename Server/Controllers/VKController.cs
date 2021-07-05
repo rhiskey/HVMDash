@@ -14,6 +14,7 @@ using VkNet;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Enums;
 using VkNet.Model;
+using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 
 namespace HVMDash.Server.Controllers
@@ -64,6 +65,20 @@ namespace HVMDash.Server.Controllers
                 }
                 else return NotFound();
             }
+        }
+
+        // POST: api/vk/send?MediaId=111111&OwnerId=-2222222&userid=3333333&message=text
+        [HttpPost("send")]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 5)]
+        public async Task<ActionResult<string>> SendVKMessage(string message, long? userid, long? ownerid, long? mediaid)
+        {
+            string jsonString;
+            var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
+            var msgId = await SendVK(ref cfg, ref message, ref userid, ref ownerid, ref mediaid);
+
+            jsonString = JsonSerializer.Serialize(msgId);
+
+            return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
         private TrackSearching SearchVK(ref string name, ref vkaudioposter_ef.Model.Configuration configuration)
@@ -125,7 +140,7 @@ namespace HVMDash.Server.Controllers
                         newTrack.Trackname = fullTrackName.Trim();
                         newTrack.OwnerId = audio.OwnerId;
                         newTrack.MediaId = audio.Id;
-     
+
                         break;
                     }
                     else continue;
@@ -134,8 +149,37 @@ namespace HVMDash.Server.Controllers
             return newTrack;
         }
 
+        private Task<long> SendVK(ref vkaudioposter_ef.Model.Configuration configuration, ref string message, ref long? userId, ref long? ownerId, ref long? mediaId )
+        {
+            var api = new VkApi();
+
+            api.Authorize(new ApiAuthParams
+            {   
+                AccessToken = configuration.VKCommunityAccessToken
+            });
+
+            List<VkNet.Model.Attachments.MediaAttachment> attachments = new();
+
+            attachments.Add(
+               new Audio
+               {
+                   OwnerId = ownerId,
+                   Id = mediaId,
+                   AccessKey = configuration.AccessToken,
+               });
+
+            var res = api.Messages.SendAsync(new MessagesSendParams
+            {
+                UserId = userId,
+                Attachments = attachments,
+                Message = message,
+                RandomId = DateTime.Now.Ticks,
+                //GroupId = (ulong)configuration.GroupId
+            });
+
+            return res;
+        }
 
     }
-
 
 }
