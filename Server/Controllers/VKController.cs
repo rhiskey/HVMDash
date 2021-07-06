@@ -120,6 +120,14 @@ namespace HVMDash.Server.Controllers
                     string trackName = audio.Title;
                     string subTitle = audio.Subtitle;
 
+                    int mainArtistsCount = 0;
+                    try { mainArtistsCount = mainArtists.Count(); }
+                    catch (Exception ex)
+                    {
+#if DEBUG
+                        //Logging.ErrorLogging(ex);
+#endif
+                    }
                     if (mainArtists.Count() > 1)
                         foreach (var artist in mainArtists)
                         {
@@ -152,12 +160,12 @@ namespace HVMDash.Server.Controllers
             return newTrack;
         }
 
-        private Task<long> SendVK(ref vkaudioposter_ef.Model.Configuration configuration, ref string message, ref long? userId, ref long? ownerId, ref long? mediaId )
+        private Task<long> SendVK(ref vkaudioposter_ef.Model.Configuration configuration, ref string message, ref long? userId, ref long? ownerId, ref long? mediaId)
         {
             var api = new VkApi();
 
             api.Authorize(new ApiAuthParams
-            {   
+            {
                 AccessToken = configuration.VKCommunityAccessToken
             });
 
@@ -171,8 +179,8 @@ namespace HVMDash.Server.Controllers
                    AccessKey = configuration.AccessToken,
                });
 
-            VkNet.Enums.SafetyEnums.Intent intentType = VkNet.Enums.SafetyEnums.Intent.ConfirmedNotification;
-            
+            //VkNet.Enums.SafetyEnums.Intent intentType = VkNet.Enums.SafetyEnums.Intent.ConfirmedNotification;
+
             var res = api.Messages.SendAsync(new MessagesSendParams
             {
                 UserId = userId,
@@ -180,10 +188,6 @@ namespace HVMDash.Server.Controllers
                 Message = message,
                 RandomId = new Random().Next(),
                 DontParseLinks = false,
-                
-                //Intent = intentType,
-                //SubscribeId=1
-                //GroupId = (ulong)configuration.GroupId
             });
 
             return res;
