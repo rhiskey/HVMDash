@@ -7,14 +7,15 @@
 
 @inject ISnackbar Snackbar
 @inject HttpClient Http
-
 @*@bind-Time="time*@
 <MudTimePicker PickerVariant="PickerVariant.Dialog" Label="Posts delay" Time="@time" TimeChanged="@(()=>OnTimePickerChange(time))" TimeEditMode="TimeEditMode.Normal" Color="Color.Success" />
+<MudSwitch @bind-Checked="@useApi" Color="Color.Secondary">Use ApiWS: @useApi</MudSwitch>
 
 @code {
 
     TimeSpan? time { get; set; }
     private SimpleSettings config;
+    private bool useApi { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -26,6 +27,7 @@
         config = JsonSerializer.Deserialize<SimpleSettings>(jsonString);
 
         time = new TimeSpan(config.HoursPeriod, config.MinutesPeriod, 00);
+        useApi = config.UseApiWs;
 
     }
 
@@ -36,6 +38,7 @@
 
         config.HoursPeriod = changedHours;
         config.MinutesPeriod = changedMinutes;
+        config.UseApiWs = useApi;
 
         string reqAdress = $"api/Configuration/{config.Id}";
         var response = await Http.PutAsJsonAsync(reqAdress, config);

@@ -26,10 +26,10 @@ namespace HVMDash.Server.Controllers
             var cfg = await _context.Configurations.FirstOrDefaultAsync();
             //var cfgToReturn = new { HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod };
             //return AcceptedAtAction("GetConfig", new { hours = cfg.HoursPeriod, minutes = cfg.MinutesPeriod });
-            var cfgToReturned = new SimpleSettings { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod };
+            var cfgToReturned = new SimpleSettings { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod, UseApiWs = cfg.USEApiWS };
 
             var jsonString = JsonSerializer.Serialize(cfgToReturned);
-            return CreatedAtAction("GetConfigurations", new { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod }, jsonString);
+            return CreatedAtAction("GetConfigurations", new { Id = cfg.Id, HoursPeriod = cfg.HoursPeriod, MinutesPeriod = cfg.MinutesPeriod, UseApiWs = cfg.USEApiWS }, jsonString);
         }
 
 
@@ -78,7 +78,7 @@ namespace HVMDash.Server.Controllers
         //TODO
         // GET: Configuration/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<SimpleSettings>> PutXpath(int id, SimpleSettings ss)
+        public async Task<ActionResult<SimpleSettings>> PutConfig(int id, SimpleSettings ss)
         {
             Configuration config;
             SimpleSettings simpleSettings = new();
@@ -95,9 +95,10 @@ namespace HVMDash.Server.Controllers
                 config.HoursPeriod = ss.HoursPeriod;
                 config.MinutesPeriod = ss.MinutesPeriod;
 
-                simpleSettings.Id = config.Id;
-                simpleSettings.HoursPeriod = config.HoursPeriod;
-                simpleSettings.MinutesPeriod = config.MinutesPeriod;
+                config.Id = simpleSettings.Id;
+                config.HoursPeriod = simpleSettings.HoursPeriod;
+                config.MinutesPeriod = simpleSettings.MinutesPeriod ;
+                config.USEApiWS = simpleSettings.UseApiWs;
 
                 await _context.SaveChangesAsync();
             }

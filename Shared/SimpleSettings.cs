@@ -5,5 +5,6 @@
         public int Id { get; set; }
         public int HoursPeriod { get; set; }
         public int MinutesPeriod { get; set; }
+        public bool UseApiWs { get; set; }        
     }
 }
