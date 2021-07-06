@@ -34,7 +34,7 @@ namespace HVMDash.Server.Controllers
         // GET: api/VK?name=123456
 
         [HttpGet()]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 5)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
         public async Task<ActionResult<string>> GetVKAudioIdByName(string name)
         {
             string jsonString;
@@ -69,7 +69,7 @@ namespace HVMDash.Server.Controllers
 
         // POST: api/vk/send?MediaId=111111&OwnerId=-2222222&userid=3333333&message=text
         [HttpPost("send")]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 5)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
         public async Task<ActionResult<string>> SendVKMessage(string message, long? userid, long? ownerid, long? mediaid)
         {
             string jsonString;
@@ -171,12 +171,18 @@ namespace HVMDash.Server.Controllers
                    AccessKey = configuration.AccessToken,
                });
 
+            VkNet.Enums.SafetyEnums.Intent intentType = VkNet.Enums.SafetyEnums.Intent.ConfirmedNotification;
+            
             var res = api.Messages.SendAsync(new MessagesSendParams
             {
                 UserId = userId,
                 Attachments = attachments,
                 Message = message,
-                RandomId = DateTime.Now.Ticks,
+                RandomId = new Random().Next(),
+                DontParseLinks = false,
+                
+                //Intent = intentType,
+                //SubscribeId=1
                 //GroupId = (ulong)configuration.GroupId
             });
 
