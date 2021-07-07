@@ -162,8 +162,9 @@ namespace HVMDash.Server.Controllers
 
         private Task<long> SendVK(ref vkaudioposter_ef.Model.Configuration configuration, ref string message, ref long? userId, ref long? ownerId, ref long? mediaId)
         {
-            var api = new VkApi();
-
+            var services = new ServiceCollection();
+            services.AddAudioBypass();
+            var api = new VkApi(services);
             api.Authorize(new ApiAuthParams
             {
                 AccessToken = configuration.VKCommunityAccessToken
