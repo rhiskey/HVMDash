@@ -34,7 +34,7 @@ namespace HVMDash.Server.Controllers
         // GET: api/VK?name=123456
 
         [HttpGet()]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 2)]
         public async Task<ActionResult<string>> GetVKAudioIdByName(string name)
         {
             string jsonString;
@@ -87,7 +87,7 @@ namespace HVMDash.Server.Controllers
         private TrackSearching SearchVK(ref string name, ref vkaudioposter_ef.Model.Configuration configuration)
         {
             TrackSearching newTrack = new();
-            string apiSearchToken = configuration.ApiUrl;
+            //string apiSearchToken = configuration.ApiUrl;
 
             var services = new ServiceCollection();
             services.AddAudioBypass();
@@ -128,7 +128,7 @@ namespace HVMDash.Server.Controllers
                         //Logging.ErrorLogging(ex);
 #endif
                     }
-                    if (mainArtists.Count() > 1)
+                    if (mainArtistsCount > 1)
                         foreach (var artist in mainArtists)
                         {
                             if (artist.Name != null)
