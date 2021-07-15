@@ -4,6 +4,7 @@ using HVMDash.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Rollbar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,21 +59,21 @@ namespace HVMDash.Server.Controllers
             }
             else
             {
-                //var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
+                var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
                 var accsList = await _vKAccountsContext.VKAccounts.ToListAsync();
-                TrackSearching tr = SearchVK(ref name, ref accsList);
+                TrackSearching tr = SearchVK(ref name, ref cfg, ref accsList);
                 if (tr != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
                     return CreatedAtAction("GetVKAudioIdByName", new { Name = tr.Trackname, MediaId = tr.MediaId, OwnerId = tr.OwnerId }, jsonString);
                 }
-                else return NotFound();
+                else return NotFound(); //json with status code
             }
         }
 
         // POST: api/vk/send?MediaId=111111&OwnerId=-2222222&userid=3333333&message=text
         [HttpPost("send")]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
+        //[RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
         public async Task<ActionResult<string>> SendVKMessage(string message, long? userid, long? ownerid, long? mediaid)
         {
             string jsonString;
@@ -87,7 +88,7 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
-        private TrackSearching SearchVK(ref string name, ref List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
+        private TrackSearching SearchVK(ref string name, ref vkaudioposter_ef.Model.Configuration configuration, ref List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
@@ -100,69 +101,76 @@ namespace HVMDash.Server.Controllers
             int index = random.Next(vKAccounts.Count);
             var randAcc = vKAccounts[index];
 
-            api.Authorize(new ApiAuthParams
+            try
             {
-                Login = randAcc.VKLogin,
-                Password = randAcc.VKPassword
-            });
-
-            var audios = api.Audio.Search(new AudioSearchParams
-            {
-                Autocomplete = false,
-                Query = name,
-                Count = 10,
-                SearchOwn = false,
-                Sort = AudioSort.AddedDate
-            });
-
-            if (audios.Count != 0)
-            {
-                string fullTrackName = null;
-                foreach (var audio in audios.ToList())
+                api.Authorize(new ApiAuthParams
                 {
-                    string allArtists = null;
-                    var mp3Url = audio.Url;
-                    var mainArtists = audio.MainArtists;
-                    string oneArtist = audio.Artist;
-                    string trackName = audio.Title;
-                    string subTitle = audio.Subtitle;
+                    Login = randAcc.VKLogin,
+                    Password = randAcc.VKPassword
+                });
 
-                    int mainArtistsCount = 0;
-                    try { mainArtistsCount = mainArtists.Count(); }
-                    catch (Exception ex)
+                var audios = api.Audio.Search(new AudioSearchParams
+                {
+                    Autocomplete = false,
+                    Query = name,
+                    Count = 10,
+                    SearchOwn = false,
+                    Sort = AudioSort.AddedDate
+                });
+
+                if (audios.Count != 0)
+                {
+                    string fullTrackName = null;
+                    foreach (var audio in audios.ToList())
                     {
-#if DEBUG
-                        //Logging.ErrorLogging(ex);
-#endif
-                    }
-                    if (mainArtistsCount > 1)
-                        foreach (var artist in mainArtists)
+                        string allArtists = null;
+                        var mp3Url = audio.Url;
+                        var mainArtists = audio.MainArtists;
+                        string oneArtist = audio.Artist;
+                        string trackName = audio.Title;
+                        string subTitle = audio.Subtitle;
+
+                        int mainArtistsCount = 0;
+                        try { mainArtistsCount = mainArtists.Count(); }
+                        catch (Exception ex)
                         {
-                            if (artist.Name != null)
+#if DEBUG
+                            //Logging.ErrorLogging(ex);
+#endif
+                        }
+                        if (mainArtistsCount > 1)
+                            foreach (var artist in mainArtists)
                             {
-                                allArtists += " " + artist.Name;
-                                fullTrackName = allArtists + " " + trackName + " " + subTitle;
+                                if (artist.Name != null)
+                                {
+                                    allArtists += " " + artist.Name;
+                                    fullTrackName = allArtists + " " + trackName + " " + subTitle;
+                                }
+                                else continue;
                             }
+                        else
+                        {
+                            if (mainArtists != null || oneArtist != null)
+                                fullTrackName = oneArtist + " " + trackName + " " + subTitle;
                             else continue;
                         }
-                    else
-                    {
-                        if (mainArtists != null || oneArtist != null)
-                            fullTrackName = oneArtist + " " + trackName + " " + subTitle;
+
+                        int diff = vkaudioposter_Console.Tools.Metrics.LevenshteinDistance(name, fullTrackName);
+                        if (diff != -1)
+                        {
+                            newTrack.Trackname = fullTrackName.Trim();
+                            newTrack.OwnerId = audio.OwnerId;
+                            newTrack.MediaId = audio.Id;
+
+                            break;
+                        }
                         else continue;
                     }
-
-                    int diff = vkaudioposter_Console.Tools.Metrics.LevenshteinDistance(name, fullTrackName);
-                    if (diff != -1)
-                    {
-                        newTrack.Trackname = fullTrackName.Trim();
-                        newTrack.OwnerId = audio.OwnerId;
-                        newTrack.MediaId = audio.Id;
-
-                        break;
-                    }
-                    else continue;
                 }
+            }
+            catch (Exception ex)
+            {
+                Logging.ErrorLogging(ex, configuration.RollbarDashToken);
             }
             return newTrack;
         }
@@ -189,15 +197,21 @@ namespace HVMDash.Server.Controllers
 
             //VkNet.Enums.SafetyEnums.Intent intentType = VkNet.Enums.SafetyEnums.Intent.ConfirmedNotification;
 
-            var res = api.Messages.SendAsync(new MessagesSendParams
+            Task<long> res = null;
+            try
             {
-                UserId = userId,
-                Attachments = attachments,
-                Message = message,
-                RandomId = new Random().Next(),
-                DontParseLinks = false,
-            });
-
+                res = api.Messages.SendAsync(new MessagesSendParams
+                {
+                    UserId = userId,
+                    Attachments = attachments,
+                    Message = message,
+                    RandomId = new Random().Next(),
+                    DontParseLinks = false,
+                });
+            } catch (Exception ex)
+            {
+                Logging.ErrorLogging(ex, configuration.RollbarDashToken);
+            }
             return res;
         }
 

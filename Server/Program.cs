@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Rollbar;
 using System.Linq;
 
 namespace HVMDash.Server
@@ -17,7 +18,6 @@ namespace HVMDash.Server
             }
             SPOTIFY_CLIENT_ID = cfg.SpotifyClientId;
             SPOTIFY_CLIENT_SECRET = cfg.SpotifyClientSecret;
-
 
             CreateHostBuilder(args).Build().Run();
         }
