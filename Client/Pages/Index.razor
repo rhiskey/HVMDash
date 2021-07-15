@@ -89,7 +89,7 @@
 
 @code {
     private HubConnection hubConnection;
-    private List<string> messages = new List<string>();
+    //private List<string> messages = new List<string>();
     StringBuilder sb = new StringBuilder();
     //private string userInput;
     //private string messageInput;
@@ -104,7 +104,7 @@
         {
             //var encodedMsg = $"{user}: {message}";
             var encodedMsg = $"[{DateTime.Now}]: {user} - {message}";
-            messages.Add(encodedMsg);
+            //messages.Add(encodedMsg);
             sb.AppendLine(encodedMsg);
             //ScrollToEnd();
             StateHasChanged();

@@ -25,10 +25,12 @@ namespace HVMDash.Server.Controllers
     {
         private readonly PostedTracksContext _context;
         private readonly ConfigurationContext _configContext;
-        public VKController(PostedTracksContext context, ConfigurationContext configContext)
+        private readonly VKAccountsContext _vKAccountsContext;
+        public VKController(PostedTracksContext context, ConfigurationContext configContext, VKAccountsContext vKAccountsContext)
         {
             _context = context;
             _configContext = configContext;
+            _vKAccountsContext = vKAccountsContext;
         }
 
         // GET: api/VK?name=123456
@@ -56,8 +58,9 @@ namespace HVMDash.Server.Controllers
             }
             else
             {
-                var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
-                TrackSearching tr = SearchVK(ref name, ref cfg);
+                //var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
+                var accsList = await _vKAccountsContext.VKAccounts.ToListAsync();
+                TrackSearching tr = SearchVK(ref name, ref accsList);
                 if (tr != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
@@ -84,7 +87,7 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
-        private TrackSearching SearchVK(ref string name, ref vkaudioposter_ef.Model.Configuration configuration)
+        private TrackSearching SearchVK(ref string name, ref List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
@@ -93,10 +96,14 @@ namespace HVMDash.Server.Controllers
             services.AddAudioBypass();
             var api = new VkApi(services);
 
+            var random = new Random();
+            int index = random.Next(vKAccounts.Count);
+            var randAcc = vKAccounts[index];
+
             api.Authorize(new ApiAuthParams
             {
-                Login = configuration.VKLogin,
-                Password = configuration.VKPassword
+                Login = randAcc.VKLogin,
+                Password = randAcc.VKPassword
             });
 
             var audios = api.Audio.Search(new AudioSearchParams

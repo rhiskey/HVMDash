@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using vkaudioposter_ef.Model;
 
 namespace HVMDash.Server
 {
@@ -33,7 +34,7 @@ namespace HVMDash.Server
             services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<ConfigurationContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
-
+            services.AddDbContext<VKAccountsContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
 
             services.AddMemoryCache();
             services.AddControllers().AddNewtonsoftJson(options =>
