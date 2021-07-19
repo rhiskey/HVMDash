@@ -114,7 +114,7 @@ namespace HVMDash.Server.Controllers
                     Autocomplete = false,
                     Query = name,
                     Count = 10,
-                    SearchOwn = false,
+                    SearchOwn = false,                  
                     Sort = AudioSort.AddedDate
                 });
 
@@ -182,7 +182,7 @@ namespace HVMDash.Server.Controllers
             var api = new VkApi(services);
             api.Authorize(new ApiAuthParams
             {
-                AccessToken = configuration.VKCommunityAccessToken
+                AccessToken = configuration.VKCommunityAccessTokenProd
             });
 
             List<VkNet.Model.Attachments.MediaAttachment> attachments = new();
