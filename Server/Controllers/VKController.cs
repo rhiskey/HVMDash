@@ -131,6 +131,20 @@ namespace HVMDash.Server.Controllers
                     await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(userAuthEx, configuration.RollbarDashToken);
                 }
+                catch (System.InvalidOperationException twoFaError)
+                {
+                    randAcc.Status = false;
+                    _context.Entry(randAcc).State = EntityState.Modified;
+                    await _vKAccountsContext.SaveChangesAsync();
+                    Logging.ErrorLogging(twoFaError, configuration.RollbarDashToken);
+                }
+                catch (AccessTokenInvalidException wrongToken)
+                {
+                    randAcc.Status = false;
+                    _context.Entry(randAcc).State = EntityState.Modified;
+                    await _vKAccountsContext.SaveChangesAsync();
+                    Logging.ErrorLogging(wrongToken, configuration.RollbarDashToken);
+                }
 
                 var audios = api.Audio.Search(new AudioSearchParams
                 {

@@ -1,0 +1,100 @@
+﻿@namespace HVMDash.Client.Components
+@using HVMDash.Shared
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.IO
+@using vkaudioposter_ef.Model
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+@inject HttpClient Http
+@implements IAsyncDisposable
+
+<h3>VKAccounts</h3>
+
+<InputFile id="fileInput112" OnChange="UploadFiles" hidden accept=".txt" /> @*multiple*@
+<MudButton HtmlTag="label"
+           StartIcon="@Icons.Filled.CloudUpload"
+           for="fileInput112">
+    Import
+</MudButton>
+
+@code {
+    private IJSObjectReference module;
+    MudMessageBox mboxImport { get; set; }
+    string state = "Message box hasn't been opened yet";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private async void UploadFiles(InputFileChangeEventArgs e)
+    {
+        var browserFile = e.File;
+
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+
+        Snackbar.Add($"Files starting with letter {browserFile.Name.Substring(0, 1)} are not recommended", MudBlazor.Severity.Warning);
+        Snackbar.Add($"This file has the extension {browserFile.Name.Split(".").Last()}", MudBlazor.Severity.Info);
+
+        await using FileStream fs = new FileStream("importAccounts.txt", FileMode.Create);
+        await browserFile.OpenReadStream().CopyToAsync(fs);
+
+        // To read the file, create a FileStream.
+        var myFileStream = new FileStream("importAccounts.txt", FileMode.Open);
+
+        List<vkaudioposter_ef.Model.VKAccounts> vKAccountsList = new();
+
+        using (StreamReader sr = new StreamReader(myFileStream))
+        {
+            while (!sr.EndOfStream)
+            {
+                Console.WriteLine(sr.ReadLine());
+                var splitted = sr.ReadLine().Split(':');
+
+                vkaudioposter_ef.Model.VKAccounts vkAcc = new();
+                vkAcc.VKLogin = splitted[0];
+                vkAcc.VKPassword = splitted[1];
+                vKAccountsList.Add(vkAcc);
+            }
+        }
+
+        Console.WriteLine(vKAccountsList.ToString());
+
+        //foreach (var line in myFileStream)
+        //    // Call the Deserialize method and cast to the object type.
+        //    var parsedImportedObjectList = await JsonSerializer.DeserializeAsync<List<Playlist>>(myFileStream);
+
+        bool? result = await mboxImport.Show();
+        state = result == null ? "Cancelled" : "Upload!";
+        StateHasChanged();
+
+        if (result == true)
+        {
+            string reqAdress = $"api/Playlists/";
+            if (await js.InvokeAsync<bool>("confirm", $"Do you want to import Accounts?"))
+            {
+                //foreach (var entity in parsedImportedObjectList)
+                //{
+                //    var isPlaylistExist = await Http.GetFromJsonAsync<Playlist>($"api/Playlists/{entity.PlaylistId}");
+                //    if (isPlaylistExist != null)
+                //        continue;
+
+                //    var playlist = await Http.PostAsJsonAsync<Playlist>(reqAdress, entity);
+                //    if (playlist.IsSuccessStatusCode == true)
+                //        Snackbar.Add($"Imported {entity.PlaylistName} Successfull", MudBlazor.Severity.Success);
+                //    else Snackbar.Add($"Import {entity.PlaylistName} failed \nStatus: {playlist.StatusCode}", MudBlazor.Severity.Error);
+                //    StateHasChanged();
+                //}
+                await OnInitializedAsync();
+            }
+        }
+    }
+
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await module.DisposeAsync();
+    }
+}

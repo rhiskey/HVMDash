@@ -10,6 +10,7 @@
 @*@bind-Time="time*@
 <MudTimePicker PickerVariant="PickerVariant.Dialog" Label="Posts delay" Time="@time" TimeChanged="@(()=>OnTimePickerChange(time))" TimeEditMode="TimeEditMode.Normal" Color="Color.Success" />
 <MudSwitch @bind-Checked="@useApi" Color="Color.Secondary">Use ApiWS: @useApi</MudSwitch>
+@*<VKAccounts/>*@
 
 @code {
 
