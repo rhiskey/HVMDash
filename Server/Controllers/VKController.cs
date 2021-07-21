@@ -99,6 +99,7 @@ namespace HVMDash.Server.Controllers
             var api = new VkApi(services);
 
             var random = new Random();
+        PickRandomAcc:
             int index = random.Next(vKAccounts.Count);
             var randAcc = vKAccounts[index];
 
@@ -123,6 +124,7 @@ namespace HVMDash.Server.Controllers
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(authEx, configuration.RollbarDashToken);
+                    goto PickRandomAcc;
                 }
                 catch (UserAuthorizationFailException userAuthEx)
                 {
@@ -130,6 +132,7 @@ namespace HVMDash.Server.Controllers
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(userAuthEx, configuration.RollbarDashToken);
+                    goto PickRandomAcc;
                 }
                 catch (System.InvalidOperationException twoFaError)
                 {
@@ -137,6 +140,7 @@ namespace HVMDash.Server.Controllers
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(twoFaError, configuration.RollbarDashToken);
+                    goto PickRandomAcc;
                 }
                 catch (AccessTokenInvalidException wrongToken)
                 {
@@ -144,6 +148,15 @@ namespace HVMDash.Server.Controllers
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(wrongToken, configuration.RollbarDashToken);
+                    goto PickRandomAcc;
+                }
+                catch (Exception anyEx)
+                {
+                    randAcc.Status = false;
+                    _context.Entry(randAcc).State = EntityState.Modified;
+                    await _vKAccountsContext.SaveChangesAsync();
+                    Logging.ErrorLogging(anyEx, configuration.RollbarDashToken);
+                    goto PickRandomAcc;
                 }
 
                 var audios = api.Audio.Search(new AudioSearchParams
