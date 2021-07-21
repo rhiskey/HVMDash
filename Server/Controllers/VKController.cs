@@ -38,7 +38,7 @@ namespace HVMDash.Server.Controllers
         // GET: api/VK?name=123456
 
         [HttpGet()]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 3)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
         public async Task<ActionResult<string>> GetVKAudioIdByName(string name)
         {
             string jsonString;
