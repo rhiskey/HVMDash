@@ -122,12 +122,14 @@ namespace HVMDash.Server.Controllers
                     randAcc.Status = false;
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
+                    Logging.ErrorLogging(authEx, configuration.RollbarDashToken);
                 }
                 catch (UserAuthorizationFailException userAuthEx)
                 {
                     randAcc.Status = false;
                     _context.Entry(randAcc).State = EntityState.Modified;
                     await _vKAccountsContext.SaveChangesAsync();
+                    Logging.ErrorLogging(userAuthEx, configuration.RollbarDashToken);
                 }
 
                 var audios = api.Audio.Search(new AudioSearchParams
