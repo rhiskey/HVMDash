@@ -14,6 +14,7 @@ using vkaudioposter_ef.parser;
 using VkNet;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Enums;
+using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
@@ -60,8 +61,8 @@ namespace HVMDash.Server.Controllers
             else
             {
                 var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
-                var accsList = await _vKAccountsContext.VKAccounts.ToListAsync();
-                TrackSearching tr = SearchVK(ref name, ref cfg, ref accsList);
+                var accsList = await _vKAccountsContext.VKAccounts.Where(a=>a.Status == true).ToListAsync();
+                TrackSearching tr = await SearchVK( name,  cfg,  accsList);
                 if (tr != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
@@ -88,7 +89,7 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
-        private TrackSearching SearchVK(ref string name, ref vkaudioposter_ef.Model.Configuration configuration, ref List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
+        private async Task<TrackSearching> SearchVK( string name,  vkaudioposter_ef.Model.Configuration configuration,  List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
@@ -103,11 +104,31 @@ namespace HVMDash.Server.Controllers
 
             try
             {
-                api.Authorize(new ApiAuthParams
+                try
                 {
-                    Login = randAcc.VKLogin,
-                    Password = randAcc.VKPassword
-                });
+                    api.Authorize(new ApiAuthParams
+                    {
+                        Login = randAcc.VKLogin,
+                        Password = randAcc.VKPassword
+                    });
+                }
+                catch (CaptchaNeededException ex)
+                {
+                    //captchaKey = GettingCaptcha?.Invoke(ex.Img);
+                    //captchaSid = ex.Sid;                   
+                }
+                catch (VkAuthorizationException authEx)
+                {
+                    randAcc.Status = false;
+                    _context.Entry(randAcc).State = EntityState.Modified;
+                    await _vKAccountsContext.SaveChangesAsync();
+                }
+                catch (UserAuthorizationFailException userAuthEx)
+                {
+                    randAcc.Status = false;
+                    _context.Entry(randAcc).State = EntityState.Modified;
+                    await _vKAccountsContext.SaveChangesAsync();
+                }
 
                 var audios = api.Audio.Search(new AudioSearchParams
                 {
