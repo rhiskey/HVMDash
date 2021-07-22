@@ -271,7 +271,7 @@ namespace HVMDash.Server.Controllers
                     //_context.Entry(randAcc).State = EntityState.Modified;
                     //await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(anyEx, configuration.RollbarDashToken);
-                    //goto PickRandomAcc;
+                    goto PickRandomAcc;
                 }
 
                 var audios = api.Audio.Search(new AudioSearchParams
