@@ -274,62 +274,65 @@ namespace HVMDash.Server.Controllers
                     goto PickRandomAcc;
                 }
 
-                var audios = api.Audio.Search(new AudioSearchParams
+                if (api.IsAuthorized)
                 {
-                    Autocomplete = false,
-                    Query = name,
-                    Count = 10,
-                    SearchOwn = false,                  
-                    Sort = AudioSort.AddedDate
-                });
-
-                if (audios.Count != 0)
-                {
-                    string fullTrackName = null;
-                    foreach (var audio in audios.ToList())
+                    var audios = api.Audio.Search(new AudioSearchParams
                     {
-                        string allArtists = null;
-                        var mp3Url = audio.Url;
-                        var mainArtists = audio.MainArtists;
-                        string oneArtist = audio.Artist;
-                        string trackName = audio.Title;
-                        string subTitle = audio.Subtitle;
+                        Autocomplete = false,
+                        Query = name,
+                        Count = 10,
+                        SearchOwn = false,
+                        Sort = AudioSort.AddedDate
+                    });
 
-                        int mainArtistsCount = 0;
-                        try { mainArtistsCount = mainArtists.Count(); }
-                        catch (Exception ex)
+                    if (audios.Count != 0)
+                    {
+                        string fullTrackName = null;
+                        foreach (var audio in audios.ToList())
                         {
-#if DEBUG
-                            //Logging.ErrorLogging(ex);
-#endif
-                        }
-                        if (mainArtistsCount > 1)
-                            foreach (var artist in mainArtists)
+                            string allArtists = null;
+                            var mp3Url = audio.Url;
+                            var mainArtists = audio.MainArtists;
+                            string oneArtist = audio.Artist;
+                            string trackName = audio.Title;
+                            string subTitle = audio.Subtitle;
+
+                            int mainArtistsCount = 0;
+                            try { mainArtistsCount = mainArtists.Count(); }
+                            catch (Exception ex)
                             {
-                                if (artist.Name != null)
+#if DEBUG
+                                //Logging.ErrorLogging(ex);
+#endif
+                            }
+                            if (mainArtistsCount > 1)
+                                foreach (var artist in mainArtists)
                                 {
-                                    allArtists += " " + artist.Name;
-                                    fullTrackName = allArtists + " " + trackName + " " + subTitle;
+                                    if (artist.Name != null)
+                                    {
+                                        allArtists += " " + artist.Name;
+                                        fullTrackName = allArtists + " " + trackName + " " + subTitle;
+                                    }
+                                    else continue;
                                 }
+                            else
+                            {
+                                if (mainArtists != null || oneArtist != null)
+                                    fullTrackName = oneArtist + " " + trackName + " " + subTitle;
                                 else continue;
                             }
-                        else
-                        {
-                            if (mainArtists != null || oneArtist != null)
-                                fullTrackName = oneArtist + " " + trackName + " " + subTitle;
+
+                            int diff = vkaudioposter_Console.Tools.Metrics.LevenshteinDistance(name, fullTrackName);
+                            if (diff != -1)
+                            {
+                                newTrack.Trackname = fullTrackName.Trim();
+                                newTrack.OwnerId = audio.OwnerId;
+                                newTrack.MediaId = audio.Id;
+
+                                break;
+                            }
                             else continue;
                         }
-
-                        int diff = vkaudioposter_Console.Tools.Metrics.LevenshteinDistance(name, fullTrackName);
-                        if (diff != -1)
-                        {
-                            newTrack.Trackname = fullTrackName.Trim();
-                            newTrack.OwnerId = audio.OwnerId;
-                            newTrack.MediaId = audio.Id;
-
-                            break;
-                        }
-                        else continue;
                     }
                 }
             }
