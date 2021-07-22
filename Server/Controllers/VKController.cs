@@ -5,11 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Rollbar;
+using SpotifyAPI.Web;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using vkaudioposter_ef.Model;
 using vkaudioposter_ef.parser;
 using VkNet;
 using VkNet.AudioBypassService.Extensions;
@@ -28,11 +33,13 @@ namespace HVMDash.Server.Controllers
         private readonly PostedTracksContext _context;
         private readonly ConfigurationContext _configContext;
         private readonly VKAccountsContext _vKAccountsContext;
-        public VKController(PostedTracksContext context, ConfigurationContext configContext, VKAccountsContext vKAccountsContext)
+        private readonly FoundTracksContext _foundTracksContext;
+        public VKController(PostedTracksContext context, ConfigurationContext configContext, VKAccountsContext vKAccountsContext, FoundTracksContext foundTracksContext)
         {
             _context = context;
             _configContext = configContext;
             _vKAccountsContext = vKAccountsContext;
+            _foundTracksContext = foundTracksContext;
         }
 
         // GET: api/VK?name=123456
@@ -47,29 +54,137 @@ namespace HVMDash.Server.Controllers
                 return NotFound();
             }
 
-            List<PostedTrack> postedTracksList = new();
-            postedTracksList = await _context.PostedTracks.OrderBy(t => t.Trackname).ToListAsync();
-            var isExist = postedTracksList.Exists(x => x.Trackname.Trim().ToLower() == name.Trim().ToLower());
-            PostedTrack postedTrack = new();
+            List<FoundTracks> foundTracksList = new();
+            foundTracksList = await _foundTracksContext.FoundTracks.OrderBy(t => t.Trackname).ToListAsync();
+            
+           
+            var isExist = foundTracksList.Exists(x => x.Trackname.Trim().ToLower() == name.Trim().ToLower());
+            FoundTracks foundTrack = new();
 
             if (isExist)
             {
-                postedTrack = postedTracksList.Find(x => x.Trackname.Trim().ToLower().Contains(name.Trim().ToLower()));
-                jsonString = JsonSerializer.Serialize(postedTrack);
-                return CreatedAtAction("GetVKAudioIdByName", new { Name = name, MediaId = postedTrack.MediaId, OwnerId = postedTrack.OwnerId }, jsonString);
+                foundTrack = foundTracksList.Find(x => x.Trackname.Trim().ToLower().Contains(name.Trim().ToLower()));
+                jsonString = JsonSerializer.Serialize(foundTrack);
+                return CreatedAtAction("GetVKAudioIdByName", new { Name = name, MediaId = foundTrack.MediaId, OwnerId = foundTrack.OwnerId }, jsonString);
             }
             else
             {
                 var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
                 var accsList = await _vKAccountsContext.VKAccounts.Where(a=>a.Status == true).ToListAsync();
                 TrackSearching tr = await SearchVK( name,  cfg,  accsList);
-                if (tr != null)
+                if (tr.MediaId != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
                     return CreatedAtAction("GetVKAudioIdByName", new { Name = tr.Trackname, MediaId = tr.MediaId, OwnerId = tr.OwnerId }, jsonString);
                 }
-                else return NotFound(); //json with status code
+                else
+                {
+                    TrackSearching tr2 = await SearchSpotifyAndUploadVK(name, cfg, accsList);
+
+                    if (tr2.MediaId == null) return NotFound();
+                    else
+                    {
+                        jsonString = JsonSerializer.Serialize(tr2);
+                        //Try to download spotify preview and upload to media attachment - return uploaded trackSearching obj
+                        return CreatedAtAction("GetVKAudioIdByName", new { Name = tr2.Trackname, MediaId = tr2.MediaId, OwnerId = tr2.OwnerId }, jsonString);
+                    }
+                }
+                //else return NotFound(); //json with status code
             }
+        }
+
+        private async Task<TrackSearching> SearchSpotifyAndUploadVK(string name, vkaudioposter_ef.Model.Configuration cfg, List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
+        {
+            TrackSearching tr = new();
+            String timeStamp = DateTime.Now.ToString();
+            var fileName = name + ".mp3"; 
+
+            var config = SpotifyClientConfig
+            .CreateDefault()
+            .WithAuthenticator(new ClientCredentialsAuthenticator(cfg.SpotifyClientId, cfg.SpotifyClientSecret));
+
+            var spotify = new SpotifyClient(config);
+            var search = await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Track, name));
+            var downloadUrl = "";
+
+            await foreach (var item in spotify.Paginate(search.Tracks, (s) => s.Tracks))
+            {
+                downloadUrl = item.PreviewUrl;
+                break;
+            }
+
+            var idx = downloadUrl.IndexOf("ew/");
+
+            //fileName = downloadUrl.Substring(idx + 3, downloadUrl.Length-(idx+3)) + ".mp3";
+
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(downloadUrl, fileName);
+            }
+
+            //Upload as attach to VK
+            var services = new ServiceCollection();
+            services.AddAudioBypass();
+            var api = new VkApi(services);
+
+            var random = new Random();
+        PickRandomAcc:
+            //int index = random.Next(vKAccounts.Count);
+            //var randAcc = vKAccounts[index];
+
+            var thrustedAcc = vKAccounts.Where(acc => acc.Id == 2).FirstOrDefault();
+
+            try
+            {
+                api.Authorize(new ApiAuthParams
+                {
+                    Login = thrustedAcc.VKLogin,
+                    Password = thrustedAcc.VKPassword
+                });
+            }
+            catch (Exception ex)
+            {
+                Logging.ErrorLogging(ex, cfg.RollbarDashToken);
+                //goto PickRandomAcc;                 
+            }
+
+            var uploadServer = await api.Audio.GetUploadServerAsync();
+            try
+            {
+                WebClient wc = new();
+                string responseAudio = Encoding.ASCII.GetString(wc.UploadFile(uploadServer, fileName));
+                responseAudio.GetHashCode();
+                var track = await api.Audio.SaveAsync(responseAudio);
+
+                tr.MediaId = track.Id;
+                tr.OwnerId = track.OwnerId;
+                tr.Trackname = name;
+
+                var isEntityExist = await _foundTracksContext.FoundTracks.FirstOrDefaultAsync(e => e.Trackname == name);
+                if (isEntityExist != null)
+                {
+                    return null;
+                }
+                else
+                {
+                    FoundTracks ft = new();
+                    ft.MediaId = track.Id;
+                    ft.OwnerId = track.OwnerId;
+                    ft.Trackname = name;
+                    //add in db found tracks
+                    var created = _foundTracksContext.Add(ft).Entity;
+                    var res = await _foundTracksContext.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex) { Logging.ErrorLogging(ex, cfg.RollbarDashToken); }
+
+            if (System.IO.File.Exists(fileName))
+            {
+                System.IO.File.Delete(fileName);
+            }
+
+
+            return tr;
         }
 
         // POST: api/vk/send?MediaId=111111&OwnerId=-2222222&userid=3333333&message=text
@@ -152,11 +267,11 @@ namespace HVMDash.Server.Controllers
                 }
                 catch (Exception anyEx)
                 {
-                    randAcc.Status = false;
-                    _context.Entry(randAcc).State = EntityState.Modified;
-                    await _vKAccountsContext.SaveChangesAsync();
+                    //randAcc.Status = false;
+                    //_context.Entry(randAcc).State = EntityState.Modified;
+                    //await _vKAccountsContext.SaveChangesAsync();
                     Logging.ErrorLogging(anyEx, configuration.RollbarDashToken);
-                    goto PickRandomAcc;
+                    //goto PickRandomAcc;
                 }
 
                 var audios = api.Audio.Search(new AudioSearchParams
@@ -264,6 +379,8 @@ namespace HVMDash.Server.Controllers
             }
             return res;
         }
+
+
 
     }
 
