@@ -134,7 +134,7 @@ namespace HVMDash.Server.Controllers
             //int index = random.Next(vKAccounts.Count);
             //var randAcc = vKAccounts[index];
 
-            var thrustedAcc = vKAccounts.Where(acc => acc.Id == 2).FirstOrDefault();
+            var thrustedAcc = vKAccounts.Where(acc => acc.Id == 1).FirstOrDefault();
 
             try
             {
