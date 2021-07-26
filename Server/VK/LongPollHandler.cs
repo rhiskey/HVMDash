@@ -42,7 +42,7 @@ namespace HVMDash.Server.VK
             vkapiToken = cfg.KateMobileToken;
             communityToken = cfg.VKCommunityAccessTokenProd;
             rollbarToken = cfg.RollbarDashToken;
-            groupID = 205961528;
+            groupID = cfg.GroupIdSpotyShare;
 
             KeyboardBuilder key = new KeyboardBuilder();
 
