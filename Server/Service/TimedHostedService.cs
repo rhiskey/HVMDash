@@ -1,7 +1,9 @@
 ﻿using HVMDash.Server.Context;
 using HVMDash.Server.Controllers;
+using HVMDash.Server.VK;
 using HVMDash.Shared;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -20,16 +22,33 @@ namespace HVMDash.Server.Service
         private int executionCount = 0;
         private readonly ILogger<TimedHostedService> _logger;
         private Timer _timer, _timer2;
+        //private readonly ConfigurationContext configurationContext;
+        private readonly IServiceScopeFactory scopeFactory;
+
         //_timer2;
         //private readonly PlaylistContext _context;
-        public TimedHostedService(ILogger<TimedHostedService> logger)
+        public TimedHostedService(ILogger<TimedHostedService> logger, IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
+            this.scopeFactory = scopeFactory;
         }
+
+        //public TimedHostedService(IServiceScopeFactory scopeFactory)
+        //{
+        //    this.scopeFactory = scopeFactory;
+        //}
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Timed Hosted Service running.");
+
+            using (var scope = scopeFactory.CreateScope())
+            {
+                var configContext = scope.ServiceProvider.GetRequiredService<ConfigurationContext>().Configurations.FirstOrDefault();
+                Thread task = new Thread(async () => await LongPollHandler.LongPollListenerAsync(configContext));
+                task.Start();
+
+            }
 
 #if DEBUG
             _logger.LogInformation("Mode=Debug");

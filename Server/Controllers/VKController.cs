@@ -23,6 +23,7 @@ using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
+using HVMDash.Server.VK;
 
 namespace HVMDash.Server.Controllers
 {
@@ -40,6 +41,7 @@ namespace HVMDash.Server.Controllers
             _configContext = configContext;
             _vKAccountsContext = vKAccountsContext;
             _foundTracksContext = foundTracksContext;
+
         }
 
         // GET: api/VK?name=123456
