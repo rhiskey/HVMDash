@@ -74,6 +74,7 @@ namespace HVMDash.Server.Controllers
             {
                 return NotFound();
             }
+            //var photo = track.
             object toReturn = new { Name = name};
             
             var jsonString = JsonSerializer.Serialize(toReturn);

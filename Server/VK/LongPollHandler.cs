@@ -100,12 +100,13 @@ namespace HVMDash.Server.VK
                             //long? msgID = a.Message.Id;
                             //var markAsRead = a.Message.ReadState;
                             
-                            Console.WriteLine(userMessage);
-                            byte[] bytes = Encoding.Default.GetBytes(userMessage);
-                            userMessage = Encoding.UTF8.GetString(bytes);
+                            //Console.WriteLine(userMessage);
+                            //byte[] bytes = Encoding.Default.GetBytes(userMessage);
+                            //userMessage = Encoding.UTF8.GetString(bytes);
+
+
                             // извлекает первый при сообщении, а нужно все получить, прогнаться по всем
                           
-
                             //Обработка  входящих сообщений
                             if (payload != null)//если пришло нажатие кнопки
                             {
@@ -126,6 +127,9 @@ namespace HVMDash.Server.VK
                                         SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
                                         break;
                                     case "рќр°с‡р°с‚сњ": //shit
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
+                                        break;
+                                    case "начать": //shit
                                         SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
                                         break;
                                     case "start":
