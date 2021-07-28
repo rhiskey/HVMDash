@@ -47,7 +47,7 @@ namespace HVMDash.Server.Controllers
         // GET: api/VK?name=123456
 
         [HttpGet()]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 1)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 2)]
         public async Task<ActionResult<string>> GetVKAudioIdByName(string name)
         {
             string jsonString;
@@ -115,8 +115,7 @@ namespace HVMDash.Server.Controllers
                 break;
             }
 
-            var idx = downloadUrl.IndexOf("ew/");
-
+            //var idx = downloadUrl.IndexOf("ew/");
             //fileName = downloadUrl.Substring(idx + 3, downloadUrl.Length-(idx+3)) + ".mp3";
 
             using (var client = new WebClient())
@@ -237,41 +236,31 @@ namespace HVMDash.Server.Controllers
                 }
                 catch (VkAuthorizationException authEx)
                 {
-                    randAcc.Status = false;
-                    _context.Entry(randAcc).State = EntityState.Modified;
-                    await _vKAccountsContext.SaveChangesAsync();
+                    EditAccountEntity(randAcc);
                     Logging.ErrorLogging(authEx, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
                 catch (UserAuthorizationFailException userAuthEx)
                 {
-                    randAcc.Status = false;
-                    _context.Entry(randAcc).State = EntityState.Modified;
-                    await _vKAccountsContext.SaveChangesAsync();
+                    EditAccountEntity(randAcc);
                     Logging.ErrorLogging(userAuthEx, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
                 catch (System.InvalidOperationException twoFaError)
                 {
-                    randAcc.Status = false;
-                    _context.Entry(randAcc).State = EntityState.Modified;
-                    await _vKAccountsContext.SaveChangesAsync();
+                    EditAccountEntity(randAcc);
                     Logging.ErrorLogging(twoFaError, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
                 catch (AccessTokenInvalidException wrongToken)
                 {
-                    randAcc.Status = false;
-                    _context.Entry(randAcc).State = EntityState.Modified;
-                    await _vKAccountsContext.SaveChangesAsync();
+                    EditAccountEntity(randAcc);
                     Logging.ErrorLogging(wrongToken, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
                 catch (Exception anyEx)
                 {
-                    //randAcc.Status = false;
-                    //_context.Entry(randAcc).State = EntityState.Modified;
-                    //await _vKAccountsContext.SaveChangesAsync();
+                    EditAccountEntity(randAcc);
                     Logging.ErrorLogging(anyEx, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
@@ -385,8 +374,32 @@ namespace HVMDash.Server.Controllers
             return res;
         }
 
+        private async void EditAccountEntity(VKAccounts randAcc)
+        {
+            var updatedUser = _vKAccountsContext.VKAccounts.SingleOrDefault(x => x.Id == randAcc.Id);
+            updatedUser.Status = false;
+            _vKAccountsContext.Entry(updatedUser).State = EntityState.Modified;
 
-
+            try
+            {
+                await _vKAccountsContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AccountExists(updatedUser.Id))
+                {
+                    //return newTrack;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+        }
+        private bool AccountExists(int id)
+        {
+            return _vKAccountsContext.VKAccounts.Any(e => e.Id == id);
+        }
     }
 
 }
