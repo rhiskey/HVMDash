@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+# Proxy      
+  torproxy:
+    build: torproxy/
+    ports:
+      - "9150:9150"
+    networks:
+      hvm:
+        ipv4_address: 172.20.10.130
+    #depends_on:
+    #  - hvm
+    restart: unless-stopped
