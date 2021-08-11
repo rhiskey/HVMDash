@@ -8,7 +8,7 @@ services:
       - "9150:9150"
     networks:
       hvm:
-        ipv4_address: 172.20.10.130
+        ipv4_address: 172.20.10.140
     #depends_on:
     #  - hvm
     restart: unless-stopped
