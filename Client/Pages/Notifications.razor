@@ -27,7 +27,8 @@
                     <MudSelect Label="Select topic" @bind-Value="model.Topic" For="@(() => model.Topic)"
                                HelperText="Min. 3 characters" OffsetY="true"
                                AdornmentIcon="@Icons.Material.Filled.Topic" AdornmentColor="Color.Primary">
-                        <MudSelectItem Value="@("weather")" Disabled="true">Weather</MudSelectItem>
+                        <MudSelectItem Value="@("weather")" Disabled="false">Weather</MudSelectItem>
+                        <MudSelectItem Value="@("infonotifications")" Disabled="false">Info</MudSelectItem>
                         <MudSelectItem Value="@("service")" Disabled="false">Service</MudSelectItem>
                     </MudSelect>
                     <MudTextField Label="Title" Class="mt-3" HelperText="Title (top text) of notification"
