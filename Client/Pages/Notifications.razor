@@ -24,15 +24,12 @@
             <DataAnnotationsValidator />
             <MudCard>
                 <MudCardContent>
-                    <MudSelect Label="Select topic" @bind-Value="model.Topic" For="@(() => model.Topic)"  
-                               HelperText="Min. 3 characters" OffsetY="true" 
+                    <MudSelect Label="Select topic" @bind-Value="model.Topic" For="@(() => model.Topic)"
+                               HelperText="Min. 3 characters" OffsetY="true"
                                AdornmentIcon="@Icons.Material.Filled.Topic" AdornmentColor="Color.Primary">
-                        <MudSelectItem Value="@("weather")" Disabled="false">Weather</MudSelectItem>
-                        @*<MudSelectItem Value="@("Burger")">Burger</MudSelectItem>
-                        <MudSelectItem Value="@("Hotdog")">Hot Dog</MudSelectItem>*@
+                        <MudSelectItem Value="@("weather")" Disabled="true">Weather</MudSelectItem>
+                        <MudSelectItem Value="@("service")" Disabled="false">Service</MudSelectItem>
                     </MudSelect>
-                    @*<MudTextField Label="Topic" HelperText="Min. 3 characters"
-                                  @bind-Value="model.Topic" For="@(() => model.Topic)" />*@
                     <MudTextField Label="Title" Class="mt-3" HelperText="Title (top text) of notification"
                                   @bind-Value="model.Title" For="@(() => model.Title)" />
                     <MudTextField Label="Body" HelperText="Body of notification" Class="mt-3"
