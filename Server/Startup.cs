@@ -1,4 +1,5 @@
 using HVMDash.Server.Context;
+using HVMDash.Server.Firebase;
 using HVMDash.Server.Hubs;
 using HVMDash.Server.Service;
 using Microsoft.AspNetCore.Builder;
@@ -51,7 +52,7 @@ namespace HVMDash.Server
                     new[] { "application/octet-stream" });
             });
             services.AddHostedService<TimedHostedService>();
-
+            services.AddSingleton< MobileMessagingClient>();
             //services.AddHostedService<ConsumeScopedServiceHostedService>();
             //services.AddScoped<IScopedProcessingService, ScopedProcessingService>();
         }

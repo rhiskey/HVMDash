@@ -1,0 +1,111 @@
+﻿@page "/notifications"
+@namespace HVMDash.Client.Pages
+@using HVMDash.Shared
+@using vkaudioposter_ef.parser
+@using System.Net.Http.Json
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using System.Text
+@using System.IO
+
+@inject ISnackbar Snackbar
+@inject IJSRuntime js
+@inject HttpClient Http
+@implements IAsyncDisposable
+
+
+<h3>Notifications</h3>
+
+<center>
+    <div style="max-width: 400px;">
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard>
+                <MudCardContent>
+                    <MudSelect Label="Select topic" @bind-Value="model.Topic" For="@(() => model.Topic)"  
+                               HelperText="Min. 3 characters" OffsetY="true" 
+                               AdornmentIcon="@Icons.Material.Filled.Topic" AdornmentColor="Color.Primary">
+                        <MudSelectItem Value="@("weather")" Disabled="false">Weather</MudSelectItem>
+                        @*<MudSelectItem Value="@("Burger")">Burger</MudSelectItem>
+                        <MudSelectItem Value="@("Hotdog")">Hot Dog</MudSelectItem>*@
+                    </MudSelect>
+                    @*<MudTextField Label="Topic" HelperText="Min. 3 characters"
+                                  @bind-Value="model.Topic" For="@(() => model.Topic)" />*@
+                    <MudTextField Label="Title" Class="mt-3" HelperText="Title (top text) of notification"
+                                  @bind-Value="model.Title" For="@(() => model.Title)" />
+                    <MudTextField Label="Body" HelperText="Body of notification" Class="mt-3"
+                                  @bind-Value="model.Body" For="@(() => model.Body)" InputType="InputType.Text" />
+                    @*<MudTextField Label="Password" HelperText="Repeat the password" Class="mt-3"
+        @bind-Value="model.Password2" For="@(() => model.Password2)" InputType="InputType.Password" />*@
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Send</MudButton>
+                </MudCardActions>
+            </MudCard>
+            <MudText Typo="Typo.body2" Align="Align.Center" Class="my-4">
+                Fill out the form correctly to see the success message.
+            </MudText>
+
+            <MudExpansionPanels>
+                <MudExpansionPanel Text="Show Validation Summary">
+                    @if (success)
+                    {
+                        <MudText Color="Color.Success">Success</MudText>
+                    }
+                    else
+                    {
+                        <MudText Color="@Color.Error">
+                            <ValidationSummary />
+                        </MudText>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </EditForm>
+    </div>
+</center>
+
+
+@code {
+    private IJSObjectReference module;
+
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField1;
+    MudForm form;
+
+    MobileNotifications model = new MobileNotifications();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+
+    private async Task OnValidSubmit(EditContext context)
+    {
+        success = true;
+
+        Snackbar.Add("Notifications invoked");
+
+        var response = await Http.PostAsJsonAsync("api/notifications/send", model);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Create Successfull", MudBlazor.Severity.Success);
+            // Clear and refresh
+            model = new MobileNotifications();
+            StateHasChanged();
+            //await OnInitializedAsync();
+        }
+        else { Snackbar.Add($"Error: {response.StatusCode}", MudBlazor.Severity.Error); };
+
+    }
+
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        await module.DisposeAsync();
+    }
+}
