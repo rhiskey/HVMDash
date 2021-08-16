@@ -129,7 +129,7 @@ namespace HVMDash.Server.VK
                                         SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "start":
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
+                                        SendMessageAsync("Now you can import tracks from Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
    
                                 }
