@@ -79,7 +79,6 @@ namespace HVMDash.Server.VK
                     {
                         poll = await api.Groups.GetBotsLongPollHistoryAsync(
                            new BotsLongPollHistoryParams()
-                           //{ Server = s.Server, Ts = s.Ts, Key = s.Key, Wait = 25 }); //wait=25 (default)
                            { Server = longPoolServerResponse.Server, Ts = longPoolServerResponse.Ts, Key = longPoolServerResponse.Key, Wait = 25 });
                         pts = longPoolServerResponse.Pts;
                         if (poll?.Updates == null) continue; 
@@ -110,11 +109,8 @@ namespace HVMDash.Server.VK
                             //Обработка  входящих сообщений
                             if (payload != null)//если пришло нажатие кнопки
                             {
-                                SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, null);
-                                //switch (userMessage)
-                                //{
-                                //    SendMessage("Теперь вы можете импортировать треки из Spotify!", userID, null, null);
-                                //}
+                                SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, null);
+
                             }
                             else //Если кнопку не нажимали, написали любое сообщение, отправляем клавиатуру?!
                             {
@@ -124,16 +120,16 @@ namespace HVMDash.Server.VK
                                 {
 
                                     case "рѕр°с‡р°с‚сњ":
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "рќр°с‡р°с‚сњ": //shit
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "начать": //shit
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "start":
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify!", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
    
                                 }
