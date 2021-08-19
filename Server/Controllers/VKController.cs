@@ -376,23 +376,26 @@ namespace HVMDash.Server.Controllers
 
         private async void EditAccountEntity(VKAccounts randAcc)
         {
-            var updatedUser = _vKAccountsContext.VKAccounts.SingleOrDefault(x => x.Id == randAcc.Id);
-            updatedUser.Status = false;
-            _vKAccountsContext.Entry(updatedUser).State = EntityState.Modified;
+            if (randAcc.Id != 1 || randAcc.Id != 2)
+            {
+                var updatedUser = _vKAccountsContext.VKAccounts.SingleOrDefault(x => x.Id == randAcc.Id);
+                updatedUser.Status = false;
+                _vKAccountsContext.Entry(updatedUser).State = EntityState.Modified;
 
-            try
-            {
-                await _vKAccountsContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AccountExists(updatedUser.Id))
+                try
                 {
-                    //return newTrack;
+                    await _vKAccountsContext.SaveChangesAsync();
                 }
-                else
+                catch (DbUpdateConcurrencyException)
                 {
-                    throw;
+                    if (!AccountExists(updatedUser.Id))
+                    {
+                        //return newTrack;
+                    }
+                    else
+                    {
+                        throw;
+                    }
                 }
             }
         }
