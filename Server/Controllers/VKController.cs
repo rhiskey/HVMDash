@@ -59,8 +59,8 @@ namespace HVMDash.Server.Controllers
 
             List<FoundTracks> foundTracksList = new();
             foundTracksList = await _foundTracksContext.FoundTracks.OrderBy(t => t.Trackname).ToListAsync();
-            
-           
+
+
             var isExist = foundTracksList.Exists(x => x.Trackname.Trim().ToLower() == name.Trim().ToLower());
             FoundTracks foundTrack = new();
 
@@ -73,8 +73,8 @@ namespace HVMDash.Server.Controllers
             else
             {
                 var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
-                var accsList = await _vKAccountsContext.VKAccounts.Where(a=>a.Status == true).ToListAsync();
-                TrackSearching tr = await SearchVK( name,  cfg,  accsList);
+                var accsList = await _vKAccountsContext.VKAccounts.Where(a => a.Status == true).ToListAsync();
+                TrackSearching tr = await SearchVK(name, cfg, accsList);
                 if (tr.MediaId != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
@@ -100,7 +100,7 @@ namespace HVMDash.Server.Controllers
         {
             TrackSearching tr = new();
             String timeStamp = DateTime.Now.ToString();
-            var fileName = name + ".mp3"; 
+            var fileName = name + ".mp3";
 
             var config = SpotifyClientConfig
             .CreateDefault()
@@ -143,6 +143,49 @@ namespace HVMDash.Server.Controllers
                     Login = thrustedAcc.VKLogin,
                     Password = thrustedAcc.VKPassword
                 });
+            }
+            catch (CaptchaNeededException cne)
+            {
+                string captchaKey = null;
+                ulong? captchaSid = null;
+
+                var captchaImg = cne.Img;
+                // Download image?
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(captchaImg, @"captcha.png");
+                    //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
+                }
+                var secretKey = cfg.AntiCaptchaSecretKey;
+                try
+                {
+                    AntiCaptcha anticap = new AntiCaptcha(secretKey);
+
+                    // Отправляем изображение captcha.png и ждем решения капчи
+                    string answer = anticap.GetAnswer("captcha.png");
+
+
+                    if (answer != null)
+                        captchaKey = answer;
+                }
+                catch (AntigateErrorException aee)
+                {
+                    // Antigate ответил одной из документированных в API ошибкой
+                    Logging.ErrorLogging(aee, cfg.RollbarDashToken);
+                }
+                catch (Exception e) { } // исключение иного рода
+
+
+                captchaSid = cne.Sid;
+
+                api.Authorize(new ApiAuthParams
+                {
+                    Login = thrustedAcc.VKLogin,
+                    Password = thrustedAcc.VKPassword,
+                    CaptchaKey = captchaKey,
+                    CaptchaSid = captchaSid,
+                });
+
             }
             catch (Exception ex)
             {
@@ -206,7 +249,7 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
-        private async Task<TrackSearching> SearchVK( string name,  vkaudioposter_ef.Model.Configuration configuration,  List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
+        private async Task<TrackSearching> SearchVK(string name, vkaudioposter_ef.Model.Configuration configuration, List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
@@ -235,7 +278,6 @@ namespace HVMDash.Server.Controllers
                 catch (CaptchaNeededException ex)
                 {
                     var captchaImg = ex.Img;
-                    // Download image?
                     using (WebClient client = new WebClient())
                     {
                         client.DownloadFile(captchaImg, @"captcha.png");
@@ -248,7 +290,7 @@ namespace HVMDash.Server.Controllers
 
                         // Отправляем изображение captcha.png и ждем решения капчи
                         string answer = anticap.GetAnswer("captcha.png");
-                        
+
 
                         if (answer != null)
                             captchaKey = answer;
@@ -260,7 +302,7 @@ namespace HVMDash.Server.Controllers
                     }
                     catch (Exception e) { } // исключение иного рода
 
-                  
+
                     captchaSid = ex.Sid;
 
                     api.Authorize(new ApiAuthParams
@@ -404,7 +446,8 @@ namespace HVMDash.Server.Controllers
                     RandomId = new Random().Next(),
                     DontParseLinks = false,
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logging.ErrorLogging(ex, configuration.RollbarDashToken);
             }
