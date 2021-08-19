@@ -166,7 +166,18 @@ namespace HVMDash.Server.Controllers
 
 
                     if (answer != null)
+                    {
                         captchaKey = answer;
+                        captchaSid = cne.Sid;
+
+                        api.Authorize(new ApiAuthParams
+                        {
+                            Login = thrustedAcc.VKLogin,
+                            Password = thrustedAcc.VKPassword,
+                            CaptchaKey = captchaKey,
+                            CaptchaSid = captchaSid,
+                        });
+                    }
                 }
                 catch (AntigateErrorException aee)
                 {
@@ -174,17 +185,6 @@ namespace HVMDash.Server.Controllers
                     Logging.ErrorLogging(aee, cfg.RollbarDashToken);
                 }
                 catch (Exception e) { } // исключение иного рода
-
-
-                captchaSid = cne.Sid;
-
-                api.Authorize(new ApiAuthParams
-                {
-                    Login = thrustedAcc.VKLogin,
-                    Password = thrustedAcc.VKPassword,
-                    CaptchaKey = captchaKey,
-                    CaptchaSid = captchaSid,
-                });
 
             }
             catch (Exception ex)
@@ -286,14 +286,29 @@ namespace HVMDash.Server.Controllers
                     var secretKey = configuration.AntiCaptchaSecretKey;
                     try
                     {
-                        AntiCaptcha anticap = new AntiCaptcha(secretKey);
-
+                        AntiCaptcha anticap = new(secretKey);
+                        anticap.CheckDelay = 15000; // Задержка проверки готовности капчи. Стандартно: 15000. (15 сек.)
+                        anticap.CheckRetryCount = 30; // Кол-во попыток проверки готовности капчи. Стандартно: 30
+                        anticap.SlotRetry = 5; // Кол-во попыток получения нового слота. Стандартно: 3
+                        anticap.SlotRetryDelay = 800; // Задержка повторной попытки получения слота на Antigate. Стандартно: 1000
                         // Отправляем изображение captcha.png и ждем решения капчи
                         string answer = anticap.GetAnswer("captcha.png");
 
 
                         if (answer != null)
+                        {
                             captchaKey = answer;
+                            captchaSid = ex.Sid;
+
+                            api.Authorize(new ApiAuthParams
+                            {
+                                Login = randAcc.VKLogin,
+                                Password = randAcc.VKPassword,
+                                CaptchaKey = captchaKey,
+                                CaptchaSid = captchaSid,
+                            });
+                        }
+
                     }
                     catch (AntigateErrorException aee)
                     {
@@ -302,16 +317,6 @@ namespace HVMDash.Server.Controllers
                     }
                     catch (Exception e) { } // исключение иного рода
 
-
-                    captchaSid = ex.Sid;
-
-                    api.Authorize(new ApiAuthParams
-                    {
-                        Login = randAcc.VKLogin,
-                        Password = randAcc.VKPassword,
-                        CaptchaKey = captchaKey,
-                        CaptchaSid = captchaSid,
-                    });
                 }
                 catch (VkAuthorizationException authEx)
                 {
