@@ -24,6 +24,7 @@ using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 using HVMDash.Server.VK;
+using Akumu.Antigate;
 
 namespace HVMDash.Server.Controllers
 {
@@ -221,6 +222,8 @@ namespace HVMDash.Server.Controllers
 
             try
             {
+                string captchaKey = null;
+                ulong? captchaSid = null;
                 try
                 {
                     api.Authorize(new ApiAuthParams
@@ -231,8 +234,42 @@ namespace HVMDash.Server.Controllers
                 }
                 catch (CaptchaNeededException ex)
                 {
-                    //captchaKey = GettingCaptcha?.Invoke(ex.Img);
-                    //captchaSid = ex.Sid;                   
+                    var captchaImg = ex.Img;
+                    // Download image?
+                    using (WebClient client = new WebClient())
+                    {
+                        client.DownloadFile(captchaImg, @"captcha.png");
+                        //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
+                    }
+                    var secretKey = configuration.AntiCaptchaSecretKey;
+                    try
+                    {
+                        AntiCaptcha anticap = new AntiCaptcha(secretKey);
+
+                        // Отправляем изображение captcha.png и ждем решения капчи
+                        string answer = anticap.GetAnswer("captcha.png");
+                        
+
+                        if (answer != null)
+                            captchaKey = answer;
+                    }
+                    catch (AntigateErrorException aee)
+                    {
+                        // Antigate ответил одной из документированных в API ошибкой
+                        Logging.ErrorLogging(aee, configuration.RollbarDashToken);
+                    }
+                    catch (Exception e) { } // исключение иного рода
+
+                  
+                    captchaSid = ex.Sid;
+
+                    api.Authorize(new ApiAuthParams
+                    {
+                        Login = randAcc.VKLogin,
+                        Password = randAcc.VKPassword,
+                        CaptchaKey = captchaKey,
+                        CaptchaSid = captchaSid,
+                    });
                 }
                 catch (VkAuthorizationException authEx)
                 {
