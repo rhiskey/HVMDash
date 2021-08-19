@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="antigate" Version="1.3.0" />
+    <PackageReference Include="AntiCaptchaAPI" Version="1.4.1" />
     <PackageReference Include="DotNetEnv" Version="2.1.1" />
     <PackageReference Include="FirebaseAdmin" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="5.0.9" />
