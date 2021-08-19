@@ -24,7 +24,7 @@ using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 using HVMDash.Server.VK;
-using Akumu.Antigate;
+using AntiCaptchaAPI;
 
 namespace HVMDash.Server.Controllers
 {
@@ -101,6 +101,7 @@ namespace HVMDash.Server.Controllers
             TrackSearching tr = new();
             String timeStamp = DateTime.Now.ToString();
             var fileName = name + ".mp3";
+            var secretKey = cfg.AntiCaptchaSecretKey;
 
             var config = SpotifyClientConfig
             .CreateDefault()
@@ -156,18 +157,24 @@ namespace HVMDash.Server.Controllers
                     client.DownloadFile(captchaImg, @"captcha.png");
                     //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
                 }
-                var secretKey = cfg.AntiCaptchaSecretKey;
+
                 try
                 {
-                    AntiCaptcha anticap = new AntiCaptcha(secretKey);
+                    var captcha = new AntiCaptcha(secretKey);
 
-                    // Отправляем изображение captcha.png и ждем решения капчи
-                    string answer = anticap.GetAnswer("captcha.png");
+                    var balance = await captcha.GetBalance();
 
+                    using System.Drawing.Image captchaSavedImage = System.Drawing.Image.FromFile(@"captcha.png");
+                    using MemoryStream m = new MemoryStream();
+                    captchaSavedImage.Save(m, captchaSavedImage.RawFormat);
+                    byte[] imageBytes = m.ToArray();
+                    string base64String = Convert.ToBase64String(imageBytes);
 
-                    if (answer != null)
+                    var image = await captcha.SolveImage(base64String);
+
+                    if (image.Success)
                     {
-                        captchaKey = answer;
+                        captchaKey = image.Response;
                         captchaSid = cne.Sid;
 
                         api.Authorize(new ApiAuthParams
@@ -179,12 +186,7 @@ namespace HVMDash.Server.Controllers
                         });
                     }
                 }
-                catch (AntigateErrorException aee)
-                {
-                    // Antigate ответил одной из документированных в API ошибкой
-                    Logging.ErrorLogging(aee, cfg.RollbarDashToken);
-                }
-                catch (Exception e) { } // исключение иного рода
+                catch (Exception e) { Logging.ErrorLogging(e, cfg.RollbarDashToken); }
 
             }
             catch (Exception ex)
@@ -253,6 +255,7 @@ namespace HVMDash.Server.Controllers
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
+            var secretKey = configuration.AntiCaptchaSecretKey;
 
             var services = new ServiceCollection();
             services.AddAudioBypass();
@@ -283,21 +286,24 @@ namespace HVMDash.Server.Controllers
                         client.DownloadFile(captchaImg, @"captcha.png");
                         //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
                     }
-                    var secretKey = configuration.AntiCaptchaSecretKey;
+
                     try
                     {
-                        AntiCaptcha anticap = new(secretKey);
-                        anticap.CheckDelay = 15000; // Задержка проверки готовности капчи. Стандартно: 15000. (15 сек.)
-                        anticap.CheckRetryCount = 30; // Кол-во попыток проверки готовности капчи. Стандартно: 30
-                        anticap.SlotRetry = 5; // Кол-во попыток получения нового слота. Стандартно: 3
-                        anticap.SlotRetryDelay = 800; // Задержка повторной попытки получения слота на Antigate. Стандартно: 1000
-                        // Отправляем изображение captcha.png и ждем решения капчи
-                        string answer = anticap.GetAnswer("captcha.png");
+                        var captcha = new AntiCaptcha(secretKey);
 
+                        var balance = await captcha.GetBalance();
 
-                        if (answer != null)
+                        using System.Drawing.Image captchaSavedImage = System.Drawing.Image.FromFile(@"captcha.png");
+                        using MemoryStream m = new MemoryStream();
+                        captchaSavedImage.Save(m, captchaSavedImage.RawFormat);
+                        byte[] imageBytes = m.ToArray();
+                        string base64String = Convert.ToBase64String(imageBytes);
+
+                        var image = await captcha.SolveImage(base64String);
+
+                        if (image.Success)
                         {
-                            captchaKey = answer;
+                            captchaKey = image.Response;
                             captchaSid = ex.Sid;
 
                             api.Authorize(new ApiAuthParams
@@ -308,14 +314,8 @@ namespace HVMDash.Server.Controllers
                                 CaptchaSid = captchaSid,
                             });
                         }
-
                     }
-                    catch (AntigateErrorException aee)
-                    {
-                        // Antigate ответил одной из документированных в API ошибкой
-                        Logging.ErrorLogging(aee, configuration.RollbarDashToken);
-                    }
-                    catch (Exception e) { } // исключение иного рода
+                    catch (Exception e) { Logging.ErrorLogging(e, configuration.RollbarDashToken); } 
 
                 }
                 catch (VkAuthorizationException authEx)
