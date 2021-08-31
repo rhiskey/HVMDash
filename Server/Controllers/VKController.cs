@@ -461,7 +461,7 @@ namespace HVMDash.Server.Controllers
 
         private async void EditAccountEntity(VKAccounts randAcc)
         {
-            if (randAcc.Id != 1 || randAcc.Id != 2)
+            if (randAcc.Id != 1 && randAcc.Id != 2)
             {
                 var updatedUser = _vKAccountsContext.VKAccounts.SingleOrDefault(x => x.Id == randAcc.Id);
                 updatedUser.Status = false;
