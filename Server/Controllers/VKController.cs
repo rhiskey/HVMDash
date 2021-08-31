@@ -24,7 +24,7 @@ using VkNet.Model;
 using VkNet.Model.Attachments;
 using VkNet.Model.RequestParams;
 using HVMDash.Server.VK;
-using Akumu.Antigate;
+using AntiCaptchaAPI;
 
 namespace HVMDash.Server.Controllers
 {
@@ -48,7 +48,7 @@ namespace HVMDash.Server.Controllers
         // GET: api/VK?name=123456
 
         [HttpGet()]
-        [RequestRateLimit(Name = "Limit Request Number", Seconds = 2)]
+        [RequestRateLimit(Name = "Limit Request Number", Seconds = 5)]
         public async Task<ActionResult<string>> GetVKAudioIdByName(string name)
         {
             string jsonString;
@@ -59,8 +59,8 @@ namespace HVMDash.Server.Controllers
 
             List<FoundTracks> foundTracksList = new();
             foundTracksList = await _foundTracksContext.FoundTracks.OrderBy(t => t.Trackname).ToListAsync();
-            
-           
+
+
             var isExist = foundTracksList.Exists(x => x.Trackname.Trim().ToLower() == name.Trim().ToLower());
             FoundTracks foundTrack = new();
 
@@ -73,8 +73,8 @@ namespace HVMDash.Server.Controllers
             else
             {
                 var cfg = await _configContext.Configurations.FirstOrDefaultAsync();
-                var accsList = await _vKAccountsContext.VKAccounts.Where(a=>a.Status == true).ToListAsync();
-                TrackSearching tr = await SearchVK( name,  cfg,  accsList);
+                var accsList = await _vKAccountsContext.VKAccounts.Where(a => a.Status == true).ToListAsync();
+                TrackSearching tr = await SearchVK(name, cfg, accsList);
                 if (tr.MediaId != null)
                 {
                     jsonString = JsonSerializer.Serialize(tr);
@@ -100,7 +100,8 @@ namespace HVMDash.Server.Controllers
         {
             TrackSearching tr = new();
             String timeStamp = DateTime.Now.ToString();
-            var fileName = name + ".mp3"; 
+            var fileName = name + ".mp3";
+            var secretKey = cfg.AntiCaptchaSecretKey;
 
             var config = SpotifyClientConfig
             .CreateDefault()
@@ -143,6 +144,50 @@ namespace HVMDash.Server.Controllers
                     Login = thrustedAcc.VKLogin,
                     Password = thrustedAcc.VKPassword
                 });
+            }
+            catch (CaptchaNeededException cne)
+            {
+                string captchaKey = null;
+                ulong? captchaSid = null;
+
+                var captchaImg = cne.Img;
+                // Download image?
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(captchaImg, @"captcha.png");
+                    //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
+                }
+
+                try
+                {
+                    var captcha = new AntiCaptcha(secretKey);
+
+                    var balance = await captcha.GetBalance();
+
+                    using System.Drawing.Image captchaSavedImage = System.Drawing.Image.FromFile(@"captcha.png");
+                    using MemoryStream m = new MemoryStream();
+                    captchaSavedImage.Save(m, captchaSavedImage.RawFormat);
+                    byte[] imageBytes = m.ToArray();
+                    string base64String = Convert.ToBase64String(imageBytes);
+
+                    var image = await captcha.SolveImage(base64String);
+
+                    if (image.Success)
+                    {
+                        captchaKey = image.Response;
+                        captchaSid = cne.Sid;
+
+                        api.Authorize(new ApiAuthParams
+                        {
+                            Login = thrustedAcc.VKLogin,
+                            Password = thrustedAcc.VKPassword,
+                            CaptchaKey = captchaKey,
+                            CaptchaSid = captchaSid,
+                        });
+                    }
+                }
+                catch (Exception e) { Logging.ErrorLogging(e, cfg.RollbarDashToken); }
+
             }
             catch (Exception ex)
             {
@@ -206,10 +251,11 @@ namespace HVMDash.Server.Controllers
             return CreatedAtAction("SendVKMessage", new { MessageId = msgId }, jsonString);
         }
 
-        private async Task<TrackSearching> SearchVK( string name,  vkaudioposter_ef.Model.Configuration configuration,  List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
+        private async Task<TrackSearching> SearchVK(string name, vkaudioposter_ef.Model.Configuration configuration, List<vkaudioposter_ef.Model.VKAccounts> vKAccounts)
         {
             TrackSearching newTrack = new();
             //string apiSearchToken = configuration.ApiUrl;
+            var secretKey = configuration.AntiCaptchaSecretKey;
 
             var services = new ServiceCollection();
             services.AddAudioBypass();
@@ -235,41 +281,42 @@ namespace HVMDash.Server.Controllers
                 catch (CaptchaNeededException ex)
                 {
                     var captchaImg = ex.Img;
-                    // Download image?
                     using (WebClient client = new WebClient())
                     {
                         client.DownloadFile(captchaImg, @"captcha.png");
                         //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
                     }
-                    var secretKey = configuration.AntiCaptchaSecretKey;
+
                     try
                     {
-                        AntiCaptcha anticap = new AntiCaptcha(secretKey);
+                        var captcha = new AntiCaptcha(secretKey);
 
-                        // Отправляем изображение captcha.png и ждем решения капчи
-                        string answer = anticap.GetAnswer("captcha.png");
-                        
+                        var balance = await captcha.GetBalance();
 
-                        if (answer != null)
-                            captchaKey = answer;
+                        using System.Drawing.Image captchaSavedImage = System.Drawing.Image.FromFile(@"captcha.png");
+                        using MemoryStream m = new MemoryStream();
+                        captchaSavedImage.Save(m, captchaSavedImage.RawFormat);
+                        byte[] imageBytes = m.ToArray();
+                        string base64String = Convert.ToBase64String(imageBytes);
+
+                        var image = await captcha.SolveImage(base64String);
+
+                        if (image.Success)
+                        {
+                            captchaKey = image.Response;
+                            captchaSid = ex.Sid;
+
+                            api.Authorize(new ApiAuthParams
+                            {
+                                Login = randAcc.VKLogin,
+                                Password = randAcc.VKPassword,
+                                CaptchaKey = captchaKey,
+                                CaptchaSid = captchaSid,
+                            });
+                        }
                     }
-                    catch (AntigateErrorException aee)
-                    {
-                        // Antigate ответил одной из документированных в API ошибкой
-                        Logging.ErrorLogging(aee, configuration.RollbarDashToken);
-                    }
-                    catch (Exception e) { } // исключение иного рода
+                    catch (Exception e) { Logging.ErrorLogging(e, configuration.RollbarDashToken); } 
 
-                  
-                    captchaSid = ex.Sid;
-
-                    api.Authorize(new ApiAuthParams
-                    {
-                        Login = randAcc.VKLogin,
-                        Password = randAcc.VKPassword,
-                        CaptchaKey = captchaKey,
-                        CaptchaSid = captchaSid,
-                    });
                 }
                 catch (VkAuthorizationException authEx)
                 {
@@ -404,7 +451,8 @@ namespace HVMDash.Server.Controllers
                     RandomId = new Random().Next(),
                     DontParseLinks = false,
                 });
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logging.ErrorLogging(ex, configuration.RollbarDashToken);
             }
