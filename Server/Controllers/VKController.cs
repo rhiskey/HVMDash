@@ -297,7 +297,7 @@ namespace HVMDash.Server.Controllers
                 }
                 catch (Exception anyEx)
                 {
-                    EditAccountEntity(randAcc);
+                    //EditAccountEntity(randAcc);
                     Logging.ErrorLogging(anyEx, configuration.RollbarDashToken);
                     goto PickRandomAcc;
                 }
