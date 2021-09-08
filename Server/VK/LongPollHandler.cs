@@ -109,7 +109,7 @@ namespace HVMDash.Server.VK
                             //Обработка  входящих сообщений
                             if (payload != null)//если пришло нажатие кнопки
                             {
-                                SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, null);
+                                SendMessageAsync("Done! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, null);
 
                             }
                             else //Если кнопку не нажимали, написали любое сообщение, отправляем клавиатуру?!
