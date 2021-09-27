@@ -46,7 +46,7 @@ namespace HVMDash.Server.VK
 
             KeyboardBuilder key = new KeyboardBuilder();
 
-            key.AddButton("Начать", null, agree);
+            //key.AddButton("Начать", null, agree);
             key.AddButton("Start", null, def);
 
             MessageKeyboard keyboard = key.Build();
@@ -109,7 +109,7 @@ namespace HVMDash.Server.VK
                             //Обработка  входящих сообщений
                             if (payload != null)//если пришло нажатие кнопки
                             {
-                                SendMessageAsync("Done! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, null);
+                                SendMessageAsync("Done! Вернитесь в приложение и экспортируйте треки https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, null);
 
                             }
                             else //Если кнопку не нажимали, написали любое сообщение, отправляем клавиатуру?!
@@ -120,16 +120,16 @@ namespace HVMDash.Server.VK
                                 {
 
                                     case "рѕр°с‡р°с‚сњ":
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! Вернитесь в приложение и экспортируйте треки https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "рќр°с‡р°с‚сњ": //shit
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! Вернитесь в приложение и экспортируйте треки https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "начать": //shit
-                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
+                                        SendMessageAsync("Теперь вы можете импортировать треки из Spotify! Вернитесь в приложение и экспортируйте треки https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
                                     case "start":
-                                        SendMessageAsync("Now you can import tracks from Spotify! https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
+                                        SendMessageAsync("Now you can import tracks from Spotify! Go back to app and tap export button https://play.google.com/store/apps/details?id=com.rhiskey.spoty2vkshare", userID, keyboard);
                                         break;
    
                                 }
