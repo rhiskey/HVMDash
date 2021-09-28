@@ -1,6 +1,10 @@
-﻿using HVMDash.Shared;
+﻿using HVMDash.Server.Context;
+using HVMDash.Shared;
 using Microsoft.AspNetCore.Mvc;
 using SpotifyAPI.Web;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -12,11 +16,22 @@ namespace HVMDash.Server.Controllers
     [ApiController]
     public class SpotifyController : ControllerBase
     {
+        private readonly PlaylistContext _context;
+        public SpotifyController(PlaylistContext context)
+        {
+            _context = context;
+        }
+
+
         // GET: api/Spotify/name?id=123456
         [HttpGet("name")]
         public async Task<ActionResult<string>> GetSpotify(string id)
         {
             string name = "";
+            FullPlaylist playlist = null;
+            Followers flwrs = null;
+            List<Image> images = null;
+
             if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
@@ -28,10 +43,28 @@ namespace HVMDash.Server.Controllers
 
             var api = new SpotifyClient(config);
 
-            var playlist = await api.Playlists.Get(id);
-            name = playlist.Name;
-            var images = playlist.Images;
-            var flwrs = playlist.Followers;
+            try
+            {
+                playlist = await api.Playlists.Get(id);
+                name = playlist.Name;
+                images = playlist.Images;
+                flwrs = playlist.Followers;
+            } catch (SpotifyAPI.Web.APIException webApiEx) //Something with playlist (NOT FOUND, deleted)
+            {
+                var dbPlId = String.Format("spotify:playlist:{0}", id);
+                var playlistInDBbyID = _context.Playlists.Where(b => b.PlaylistId == dbPlId).FirstOrDefault();
+
+                ////var playlistInDB = await _context.Playlists.FindAsync(id);
+                if (playlistInDBbyID == null)
+                {
+                    return NotFound();
+                }
+
+                _context.Playlists.Remove(playlistInDBbyID);
+                await _context.SaveChangesAsync();
+
+                //return NotFound();
+            }
 
             if (name == null)
             {

@@ -42,12 +42,14 @@ namespace HVMDash.Server.Service
         {
             _logger.LogInformation("Timed Hosted Service running.");
 
+            PlaylistContext plContext;
             using (var scope = scopeFactory.CreateScope())
             {
                 var configContext = scope.ServiceProvider.GetRequiredService<ConfigurationContext>().Configurations.FirstOrDefault();
                 Thread task = new Thread(async () => await LongPollHandler.LongPollListenerAsync(configContext));
                 task.Start();
 
+                plContext = scope.ServiceProvider.GetRequiredService<PlaylistContext>();
             }
 
 #if DEBUG
@@ -76,30 +78,15 @@ namespace HVMDash.Server.Service
         {
             var count = Interlocked.Increment(ref executionCount);
 
-            //Get Playlists
+            var playlistContext = (PlaylistContext)state;
 
-            //List<Playlist> Playlists  = await _context.Playlists.OrderBy(p => p.Status).ThenBy(p => p.PlaylistName).ToListAsync();
-
-
-            //for (int i = 0; i < Playlists.Count(); i++)
-            //{
-            //    var playlist = Playlists.ToList()[i];
-            //    var uri = playlist.PlaylistId;
-            //    var id = Formatters.GetIdFromSpotifyUri(uri);
-
-            //    SpotifyController sc = new();
-            //    var response = await sc.GetSpotify(id);
-
-            //    string jsonString = JsonSerializer.Serialize(response);
-            //    var playlistInfo = JsonSerializer.Deserialize<SpotifyAPIPlaylist>(jsonString);
-
-            //    playlist.ImageUrl = playlistInfo.Images.First().Url;
-            //    playlist.FollowersTotal = playlistInfo.Followers.Total;
-            //    playlist.UpdateDate = DateTime.Now;
-
-            //    //PlaylistsController pc = new();
-            //    //pc.PutPlaylist(id, playlist);
-            //}
+            try
+            {
+                UpdatePlaylists.UpdatePlaylistsTask(playlistContext);
+            }catch (Exception ex)
+            {
+                _logger.LogInformation($"Error: ${ex.Message}");
+            }
 
             _logger.LogInformation(
             "Timed Hosted Service Update Playlists is working. Count: {Count}", count);
