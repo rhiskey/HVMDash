@@ -35,7 +35,6 @@ namespace HVMDash.Server
             services.AddDbContext<ParserXpathContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<PostContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<ConfigurationContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
-            services.AddDbContext<VKAccountsContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<FoundTracksContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
             services.AddDbContext<TelegramUsersContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("MSSQL")));
 
