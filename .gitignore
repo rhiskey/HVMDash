@@ -346,3 +346,4 @@ healthchecksdb
 MigrationBackup/
 /Server/appsettings.json
 /Server/Dockerfile
+/*.DS_Store
