@@ -347,3 +347,7 @@ MigrationBackup/
 /Server/appsettings.json
 /Server/Dockerfile
 /*.DS_Store
+
+Server/tempimage.png
+
+Server/tempimage.jpg

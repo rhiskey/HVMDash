@@ -51,7 +51,7 @@ namespace HVMDash.Server
                     new[] { "application/octet-stream" });
             });
             services.AddHostedService<TimedHostedService>();
-            services.AddSingleton< MobileMessagingClient>();
+            //services.AddSingleton< MobileMessagingClient>();
             //services.AddHostedService<ConsumeScopedServiceHostedService>();
             //services.AddScoped<IScopedProcessingService, ScopedProcessingService>();
         }

@@ -1,6 +1,5 @@
 ﻿using HVMDash.Server.Context;
 using HVMDash.Server.Controllers;
-using HVMDash.Server.VK;
 using HVMDash.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,15 +41,15 @@ namespace HVMDash.Server.Service
         {
             _logger.LogInformation("Timed Hosted Service running.");
 
-            PlaylistContext plContext;
-            using (var scope = scopeFactory.CreateScope())
-            {
-                var configContext = scope.ServiceProvider.GetRequiredService<ConfigurationContext>().Configurations.FirstOrDefault();
-                Thread task = new Thread(async () => await LongPollHandler.LongPollListenerAsync(configContext));
-                task.Start();
+            //PlaylistContext plContext;
+            //using (var scope = scopeFactory.CreateScope())
+            //{
+            //    var configContext = scope.ServiceProvider.GetRequiredService<ConfigurationContext>().Configurations.FirstOrDefault();
+            //    Thread task = new Thread(async () => await LongPollHandler.LongPollListenerAsync(configContext));
+            //    task.Start();
 
-                plContext = scope.ServiceProvider.GetRequiredService<PlaylistContext>();
-            }
+            //    plContext = scope.ServiceProvider.GetRequiredService<PlaylistContext>();
+            //}
 
 #if DEBUG
             _logger.LogInformation("Mode=Debug");
